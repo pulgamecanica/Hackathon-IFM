@@ -14,7 +14,7 @@ class ChartData
   def sentiment_by_focus
     counts = scope.group(:focus, :sentiment).count
     focuses.map do |focus|
-      segments = SENTIMENTS.index_with { |s| counts[[focus, s]] || 0 }
+      segments = SENTIMENTS.index_with { |s| counts[[ focus, s ]] || 0 }
       { focus: focus, total: segments.values.sum, segments: segments }
     end
   end
