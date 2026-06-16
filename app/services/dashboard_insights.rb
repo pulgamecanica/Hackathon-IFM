@@ -30,7 +30,7 @@ class DashboardInsights
     AiInsight.negative_sentiment.pluck(:topics).each do |topics|
       next if topics.blank?
 
-      topics.each_key { |theme| tally[theme.tr("-", " ")] += 1 }
+      topics.each_key { |theme| tally[theme.tr("_-", "  ").strip] += 1 }
     end
     tally.sort_by { |_, n| -n }.first(limit)
   end

@@ -1,0 +1,30 @@
+<section>
+  <div class="mb-5 flex items-end justify-between border-b border-neutral-200 pb-3">
+    <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Visualizations</h2>
+    <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+      <%= ClaudeClient.available? ? "AI-assisted" : "Procedural" %>
+    </span>
+  </div>
+
+  <%# Procedural charts (live). %>
+  <%= render "dashboard/charts_default", chart_data: @chart_data %>
+
+  <%# AI chart generation — describe a chart, Claude picks + parameterizes it. %>
+  <div class="mt-6 border border-neutral-900">
+    <div class="border-b border-neutral-200 px-6 py-4">
+      <h3 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Generate a Chart</h3>
+    </div>
+    <div class="px-6 py-5">
+      <%= form_with url: charts_path, method: :post,
+                    data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" },
+                    class: "flex items-center border-b border-neutral-900" do |f| %>
+        <%= f.text_field :prompt, autocomplete: "off",
+              placeholder: "e.g. “compare ratings by product” or “sentiment for distribution”",
+              class: "flex-1 bg-transparent py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none" %>
+        <%= f.submit "Generate",
+              class: "ml-4 text-[11px] uppercase tracking-[0.25em] text-neutral-900 hover:text-neutral-500 cursor-pointer" %>
+      <% end %>
+      <div id="ai-charts" class="mt-6 space-y-px empty:mt-0"></div>
+    </div>
+  </div>
+</section>

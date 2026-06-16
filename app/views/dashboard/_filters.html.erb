@@ -1,0 +1,60 @@
+<%
+  panels = [
+    { title: "Product Specificities", focus: "product", themes: [
+      ["Material", "material"], ["Fit", "fit"], ["Color", "color"], ["Design", "design"],
+      ["Comfort", "comfort"], ["Function's Needs", "function"], ["Quality", "quality"]
+    ] },
+    { title: "Distribution", focus: "distribution", themes: [
+      ["Stock Availability", "stock_availability"], ["Delays in Delivery", "delivery_delays"]
+    ] },
+    { title: "Visibility", focus: "visibility", themes: [
+      ["In Store", "in_store"], ["Online Campaign", "online_campaign"], ["OOH Campaign", "ooh_campaign"]
+    ] }
+  ]
+  facets = ["Zone", "Customers Nationality", "Customers Age", "Collection (SS26…)",
+            "Function", "Line", "SKU", "# Respondants", "High / Low"]
+  sentiments = [["All", "all"], ["Positive", "positive"], ["Neutral", "neutral"], ["Negative", "negative"], ["Mixed", "mixed"]]
+%>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="font-serif text-3xl tracking-[0.1em]">Filters</h2>
+    <button type="button" data-action="filter#reset"
+            class="text-[10px] uppercase tracking-[0.25em] text-neutral-500 hover:text-neutral-900 cursor-pointer">Reset</button>
+  </div>
+
+  <%# Broader facet vocabulary (display) %>
+  <div class="flex flex-wrap gap-2">
+    <% facets.each do |facet| %>
+      <span class="facet-chip"><%= facet %></span>
+    <% end %>
+  </div>
+
+  <%# Type of feedback — functional sentiment filter %>
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Type of Feedback</span>
+    <% sentiments.each_with_index do |(label, value), i| %>
+      <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+              data-filter-group-param="sentiment" data-filter-value-param="<%= value %>"
+              <%= "data-active data-filter-default" if i.zero? %>><%= label %></button>
+    <% end %>
+  </div>
+
+  <%# Three category groups, each a focus selector with its own sub-filters %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-neutral-200 border border-neutral-200">
+    <% panels.each do |panel| %>
+      <div class="bg-white p-5">
+        <button type="button" class="filter-panel-title" data-filter-target="chip" data-action="filter#apply"
+                data-filter-group-param="focus" data-filter-value-param="<%= panel[:focus] %>">
+          <%= panel[:title] %>
+        </button>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <% panel[:themes].each do |label, value| %>
+            <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+                    data-filter-group-param="theme" data-filter-value-param="<%= value %>"><%= label %></button>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

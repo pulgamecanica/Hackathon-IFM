@@ -13,5 +13,9 @@ class DashboardBroadcaster
       STREAM, target: "analytics",
       partial: "dashboard/analytics", locals: { insights: DashboardInsights.new }
     )
+    Turbo::StreamsChannel.broadcast_replace_to(
+      STREAM, target: "charts",
+      partial: "dashboard/charts_default", locals: { chart_data: ChartData.new }
+    )
   end
 end

@@ -1,0 +1,8 @@
+<%# A generated chart with its prompt + provenance. %>
+<div class="border border-neutral-200">
+  <div class="flex items-center justify-between bg-neutral-50 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-400">
+    <span class="text-neutral-600">“<%= prompt %>”</span>
+    <span><%= spec.source %></span>
+  </div>
+  <%= render "dashboard/chart", kind: spec.kind, chart_data: spec.chart_data, title: spec.title %>
+</div>

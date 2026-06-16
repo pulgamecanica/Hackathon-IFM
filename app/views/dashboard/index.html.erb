@@ -13,7 +13,7 @@
   <header class="border-b border-neutral-900">
     <div class="mx-auto max-w-7xl px-6 py-8">
       <div class="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-        <span><%= l(Date.current, format: :long) rescue Date.current.strftime("%d %B %Y") %></span>
+        <span class="font-numeric tracking-[0.15em]"><%= l(Date.current, format: :long) rescue Date.current.strftime("%d %B %Y") %></span>
         <span class="flex items-center gap-2">
           <span class="h-1.5 w-1.5 rounded-full bg-neutral-900 animate-pulse"></span>Live
         </span>
@@ -55,7 +55,14 @@
 
     <%= render "dashboard/chat" %>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+    <%= render "dashboard/charts" %>
+
+    <div data-controller="filter">
+      <div class="mb-6 border-b border-neutral-200 pb-4">
+        <%= render "dashboard/filters" %>
+      </div>
+      <div data-filter-target="region" data-active-focus="all" data-active-sentiment="all" data-active-theme="all"
+           class="grid grid-cols-1 lg:grid-cols-2 gap-10">
       <section>
         <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">Incoming Feedback</h2>
         <div id="feed" class="divide-y divide-neutral-200 border-y border-neutral-200">
@@ -73,6 +80,7 @@
           <% end %>
         </div>
       </section>
+      </div>
     </div>
   </main>
 

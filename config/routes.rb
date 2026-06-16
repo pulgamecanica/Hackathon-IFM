@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   # Feedback chatbot — natural-language querying with filters.
   post "chat" => "chat#create", as: :chat
 
+  # AI chart generation — natural-language request → procedural chart.
+  post "charts" => "charts#create", as: :charts
+
   # Real-time ingestion API (stub feeder + real external sources POST here).
   namespace :api do
     namespace :v1 do

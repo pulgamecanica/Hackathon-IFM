@@ -88,6 +88,7 @@ production:
   primary: &primary_production
     <<: *default
     database: hackathon_ifm_production
+    host: <%= ENV["DB_HOST"] %>
     username: hackathon_ifm
     password: <%= ENV["HACKATHON_IFM_DATABASE_PASSWORD"] %>
   cache:

@@ -1,0 +1,96 @@
+<%#
+  Reusable procedural chart renderer.
+  locals: kind ("sentiment_by_focus" | "rating_by_product" | "focus_distribution"),
+          chart_data (ChartData instance), title (String)
+%>
+<figure class="bg-white p-6 border border-neutral-200">
+  <figcaption class="mb-5 flex items-baseline gap-3">
+    <% if local_assigns[:chart_index].present? %>
+      <span class="font-numeric text-sm text-neutral-400"><%= local_assigns[:chart_index] %></span>
+    <% end %>
+    <h3 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500"><%= title %></h3>
+  </figcaption>
+
+  <% case kind %>
+  <% when "sentiment_by_focus" %>
+    <% grads = { "positive" => "grad-positive", "neutral" => "grad-neutral", "negative" => "grad-negative", "mixed" => "grad-mixed" } %>
+    <div class="space-y-5">
+      <% chart_data.sentiment_by_focus.each do |row| %>
+        <div>
+          <div class="flex items-baseline justify-between mb-1.5">
+            <span class="text-sm uppercase tracking-[0.15em] text-neutral-800"><%= row[:focus] %></span>
+            <span class="font-numeric text-xs text-neutral-400"><%= row[:total] %></span>
+          </div>
+          <div class="flex h-3 w-full overflow-hidden bg-neutral-100">
+            <% if row[:total].positive? %>
+              <% ChartData::SENTIMENTS.each do |s| %>
+                <% c = row[:segments][s] %>
+                <% next if c.zero? %>
+                <div class="<%= grads[s] %> h-full" style="width: <%= (c.to_f / row[:total] * 100).round(1) %>%"
+                     title="<%= s %>: <%= c %>"></div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-neutral-400">
+      <% grads.each do |label, g| %>
+        <span class="flex items-center gap-1.5"><span class="h-2 w-2 <%= g %>"></span><%= label %></span>
+      <% end %>
+    </div>
+
+  <% when "rating_by_product" %>
+    <% rows = chart_data.rating_by_product %>
+    <% if rows.empty? %>
+      <p class="text-sm text-neutral-400 italic font-serif">No ratings yet.</p>
+    <% else %>
+      <div class="space-y-4">
+        <% rows.each do |row| %>
+          <div>
+            <div class="flex items-baseline justify-between mb-1.5">
+              <span class="text-sm text-neutral-800"><%= row[:name] %></span>
+              <span class="font-numeric text-sm text-grad-satisfaction"><%= number_with_precision(row[:avg], precision: 2) %></span>
+            </div>
+            <div class="h-2 w-full bg-neutral-100 overflow-hidden">
+              <div class="h-full grad-satisfaction" style="width: <%= (row[:avg] / 5.0 * 100).round %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <p class="mt-4 text-[10px] uppercase tracking-[0.18em] text-neutral-400">Overall rating · scale of 5</p>
+    <% end %>
+
+  <% when "focus_distribution" %>
+    <% rows = chart_data.focus_distribution %>
+    <% shades = { "product" => "#0a0a0a", "distribution" => "#6b6b6b", "visibility" => "#cfcfcf" } %>
+    <%
+      total = rows.sum { _1[:count] }
+      stops = []
+      deg = 0
+      rows.each do |r|
+        slice = total.zero? ? 0 : (r[:count].to_f / total * 360)
+        stops << "#{shades[r[:focus]]} #{deg.round(1)}deg #{(deg + slice).round(1)}deg"
+        deg += slice
+      end
+      stops << "#f0f0f0 0deg 360deg" if total.zero?
+    %>
+    <div class="flex items-center gap-8">
+      <div class="relative h-36 w-36 shrink-0 rounded-full"
+           style="background: conic-gradient(<%= stops.join(', ') %>);">
+        <div class="absolute inset-[22%] rounded-full bg-white flex items-center justify-center">
+          <span class="font-numeric text-xl text-neutral-900"><%= total %></span>
+        </div>
+      </div>
+      <ul class="space-y-3">
+        <% rows.each do |r| %>
+          <li class="flex items-center gap-3 text-sm">
+            <span class="h-3 w-3 shrink-0" style="background: <%= shades[r[:focus]] %>"></span>
+            <span class="uppercase tracking-[0.15em] text-neutral-800 w-28"><%= r[:focus] %></span>
+            <span class="font-numeric text-neutral-500"><%= r[:share] %>%</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</figure>

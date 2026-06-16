@@ -9,28 +9,46 @@
 #   sentiment_score  -> Float in [-1.0, 1.0]
 #   focus            -> Symbol matching AiInsight.focus enum (product/distribution/visibility)
 #   summary          -> String
-#   key_themes       -> Array<String>
+#   key_themes       -> Array<String>  (canonical theme tokens — drive the filters)
 #   topics           -> Hash{String => Float}  (theme => weight, for ai_insights.topics jsonb)
 #   confidence       -> Float in [0.0, 1.0]
 #   dimension_scores -> Hash{Symbol => Float}  (Rating.dimension => 1.0..5.0 score)
 #   model_version    -> String
 class StubAiAnalyzer
-  MODEL_VERSION = "stub-analyzer-v2"
+  MODEL_VERSION = "stub-analyzer-v3"
 
   POSITIVE_WORDS = %w[love stunning gorgeous elegant flawless perfect fast luxurious soft chic impeccable].freeze
   NEGATIVE_WORDS = %w[cheap itchy disappointed defective late torn faded misleading flimsy overpriced poor].freeze
 
-  # Themes grouped by the three feedback points (Decision: product/distribution/visibility).
-  # The dominant theme's group becomes the insight's focus.
+  # Canonical theme tokens grouped by the three feedback points. These match the
+  # sub-filters in the dashboard filter panel one-to-one. The dominant token's
+  # group becomes the insight's focus.
   FOCUS_THEMES = {
-    product:      %w[fit fabric quality stitching design comfort sizing color material craftsmanship],
-    distribution: %w[delivery shipping packaging restock availability returns logistics price],
-    visibility:   %w[website lookbook campaign styling discovery brand sizing-guide support service]
+    product: {
+      "material" => %w[material fabric silk cashmere leather wool textile],
+      "fit"      => %w[fit sizing size tailoring],
+      "color"    => %w[color colour shade hue],
+      "design"   => %w[design silhouette cut aesthetic],
+      "comfort"  => %w[comfort comfortable cosy],
+      "function" => %w[function versatile practical utility],
+      "quality"  => %w[quality stitching craftsmanship seams durable]
+    },
+    distribution: {
+      "stock_availability" => %w[stock restock availability sold-out unavailable],
+      "delivery_delays"    => %w[delivery shipping late delay arrived logistics]
+    },
+    visibility: {
+      "in_store"        => %w[store boutique in-store counter],
+      "online_campaign" => %w[online website campaign digital social ecommerce],
+      "ooh_campaign"    => %w[ooh billboard outdoor lookbook poster print]
+    }
   }.freeze
 
-  THEME_POOL = FOCUS_THEMES.values.flatten.freeze
+  # token => its owning focus, and the flat token list, derived once.
+  TOKEN_FOCUS = FOCUS_THEMES.flat_map { |focus, t| t.keys.map { |tok| [ tok, focus ] } }.to_h.freeze
+  TOKEN_KEYWORDS = FOCUS_THEMES.values.reduce(:merge).freeze
+  ALL_TOKENS = TOKEN_KEYWORDS.keys.freeze
 
-  # Dimensions every insight scores. Mirrors a subset of Rating.dimension.
   SCORED_DIMENSIONS = %i[overall quality value].freeze
 
   Result = Struct.new(
@@ -46,14 +64,14 @@ class StubAiAnalyzer
 
   def call
     score = compute_sentiment_score
-    found = themes
+    tokens = detect_tokens
     Result.new(
       sentiment: sentiment_label(score),
       sentiment_score: score,
-      focus: classify_focus(found),
-      summary: build_summary(score, found),
-      key_themes: found,
-      topics: found.index_with { rand(0.4..1.0).round(2) },
+      focus: classify_focus(tokens),
+      summary: build_summary(score, tokens),
+      key_themes: tokens,
+      topics: tokens.index_with { rand(0.4..1.0).round(2) },
       confidence: rand(0.6..0.98).round(3),
       dimension_scores: dimension_scores(score),
       model_version: MODEL_VERSION
@@ -64,7 +82,6 @@ class StubAiAnalyzer
 
   attr_reader :feedback, :text
 
-  # Lexicon-based score nudged by random noise so repeated runs vary slightly.
   def compute_sentiment_score
     pos = POSITIVE_WORDS.count { |w| text.include?(w) }
     neg = NEGATIVE_WORDS.count { |w| text.include?(w) }
@@ -79,25 +96,25 @@ class StubAiAnalyzer
     :neutral
   end
 
-  def themes
-    found = THEME_POOL.select { text.include?(_1.tr("-", " ")) }
-    found.presence || THEME_POOL.sample(rand(1..3))
+  def detect_tokens
+    found = ALL_TOKENS.select do |token|
+      TOKEN_KEYWORDS[token].any? { |kw| text.include?(kw.tr("-", " ")) || text.include?(kw) }
+    end
+    found.presence || [ ALL_TOKENS.sample ]
   end
 
-  # Focus = the feedback point that owns the most of the detected themes.
-  def classify_focus(found)
-    counts = FOCUS_THEMES.transform_values { |themes| (found & themes).size }
-    best = counts.max_by { |_, n| n }
-    best && best.last.positive? ? best.first : FOCUS_THEMES.keys.sample
+  # Focus = the point that owns the most detected tokens.
+  def classify_focus(tokens)
+    counts = tokens.group_by { |t| TOKEN_FOCUS[t] }.transform_values(&:size)
+    counts.max_by { |_, n| n }&.first || FOCUS_THEMES.keys.sample
   end
 
-  def build_summary(score, found)
+  def build_summary(score, tokens)
     tone = sentiment_label(score)
-    subject = found.first&.tr("-", " ") || "the item"
+    subject = tokens.first&.tr("_", " ") || "the piece"
     "Customer expressed #{tone} sentiment, primarily about #{subject}."
   end
 
-  # Map the [-1, 1] sentiment onto a 1.0..5.0 scale, with per-dimension jitter.
   def dimension_scores(score)
     base = (3.0 + score * 2.0)
     SCORED_DIMENSIONS.index_with do

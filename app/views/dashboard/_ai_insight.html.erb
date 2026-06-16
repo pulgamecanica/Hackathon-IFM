@@ -6,7 +6,10 @@
    } %>
 <% badge = sentiment_styles[ai_insight.sentiment] || "grad-neutral text-white" %>
 
-<div id="<%= dom_id(ai_insight) %>" class="py-5 px-1">
+<% themes = ai_insight.key_themes.to_s.split(", ") %>
+<div id="<%= dom_id(ai_insight) %>" class="py-5 px-1"
+     data-focus="<%= ai_insight.focus %>" data-sentiment="<%= ai_insight.sentiment %>"
+     data-themes="<%= themes.join(" ") %>">
   <div class="flex items-start justify-between gap-4">
     <p class="text-[15px] leading-relaxed text-neutral-800 font-serif"><%= ai_insight.summary %></p>
     <span class="shrink-0 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] <%= badge %>"><%= ai_insight.sentiment %></span>
@@ -14,10 +17,8 @@
 
   <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px] uppercase tracking-[0.18em]">
     <span class="border border-neutral-300 px-2 py-0.5 text-neutral-700"><%= ai_insight.focus %></span>
-    <% if ai_insight.key_themes.present? %>
-      <% ai_insight.key_themes.split(", ").first(3).each do |theme| %>
-        <span class="text-neutral-400"><%= theme %></span>
-      <% end %>
+    <% themes.first(3).each do |theme| %>
+      <span class="text-neutral-400"><%= theme.tr("_", " ") %></span>
     <% end %>
   </div>
 
@@ -25,9 +26,9 @@
     <% ai_insight.ratings.by_dimension(:overall).group_by(&:product_id).each do |_, ratings| %>
       <span class="text-neutral-600">
         <%= ratings.first.product.name %>
-        <span class="font-serif text-sm font-medium text-grad-satisfaction tracking-normal"><%= number_with_precision(ratings.first.score, precision: 1) %></span>
+        <span class="font-numeric text-sm text-grad-satisfaction tracking-normal"><%= number_with_precision(ratings.first.score, precision: 1) %></span>
       </span>
     <% end %>
-    <span class="ml-auto">conf <%= (ai_insight.confidence * 100).round %>%</span>
+    <span class="ml-auto">conf <span class="font-numeric"><%= (ai_insight.confidence * 100).round %></span>%</span>
   </div>
 </div>

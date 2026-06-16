@@ -1,10 +1,22 @@
 @import "tailwindcss";
 
+/* LUMA brand display face (self-hosted from public/fonts). */
+@font-face {
+  font-family: "ABChanel";
+  src: url("/fonts/abchanel.woff2") format("woff2");
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* LUMA — couture black & white.
-   Cormorant Garamond (display serif) + Jost (geometric sans), loaded in the layout head. */
+   ABChanel (brand display) + Jost (geometric sans), loaded in the layout head. */
 @theme {
   --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  /* ABChanel is the display face; Cormorant Garamond covers any missing glyphs. */
+  --font-serif: "ABChanel", "Cormorant Garamond", ui-serif, Georgia, serif;
+  /* Formal, legible figures. */
+  --font-numeric: "Libre Baskerville", ui-serif, Georgia, serif;
 }
 
 @layer base {
@@ -25,6 +37,12 @@
 /* Opaque jewel-tone gradients — the only color in the design, reserved for
    sentiment and satisfaction so meaning reads instantly against the B&W. */
 @layer utilities {
+  /* All numeric figures use Libre Baskerville with aligned tabular figures. */
+  .font-numeric {
+    font-family: var(--font-numeric);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
   .grad-positive     { background-image: linear-gradient(135deg, #047857 0%, #34d399 100%); }
   .grad-negative     { background-image: linear-gradient(135deg, #9f1239 0%, #fb7185 100%); }
   .grad-neutral      { background-image: linear-gradient(135deg, #475569 0%, #94a3b8 100%); }
@@ -38,3 +56,73 @@
     color: transparent;
   }
 }
+
+/* Category / sentiment filters — driven by data-active-* on a region wrapper, so
+   cards streamed in live via Turbo are filtered by CSS with no extra JS. */
+[data-active-focus="product"]      [data-focus]:not([data-focus="product"]),
+[data-active-focus="distribution"] [data-focus]:not([data-focus="distribution"]),
+[data-active-focus="visibility"]   [data-focus]:not([data-focus="visibility"]),
+[data-active-sentiment="positive"] [data-sentiment]:not([data-sentiment="positive"]),
+[data-active-sentiment="neutral"]  [data-sentiment]:not([data-sentiment="neutral"]),
+[data-active-sentiment="negative"] [data-sentiment]:not([data-sentiment="negative"]),
+[data-active-sentiment="mixed"]    [data-sentiment]:not([data-sentiment="mixed"]) {
+  display: none;
+}
+
+.filter-chip {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #525252;
+  cursor: pointer;
+  transition: color .15s, background-color .15s, border-color .15s;
+}
+.filter-chip:hover { border-color: #0a0a0a; color: #0a0a0a; }
+.filter-chip[data-active] { background: #0a0a0a; color: #ffffff; border-color: #0a0a0a; }
+
+/* Per-theme (sub-filter) visibility rules — one per canonical token. */
+[data-active-theme="material"]           [data-themes]:not([data-themes~="material"]),
+[data-active-theme="fit"]                [data-themes]:not([data-themes~="fit"]),
+[data-active-theme="color"]              [data-themes]:not([data-themes~="color"]),
+[data-active-theme="design"]             [data-themes]:not([data-themes~="design"]),
+[data-active-theme="comfort"]            [data-themes]:not([data-themes~="comfort"]),
+[data-active-theme="function"]           [data-themes]:not([data-themes~="function"]),
+[data-active-theme="quality"]            [data-themes]:not([data-themes~="quality"]),
+[data-active-theme="stock_availability"] [data-themes]:not([data-themes~="stock_availability"]),
+[data-active-theme="delivery_delays"]    [data-themes]:not([data-themes~="delivery_delays"]),
+[data-active-theme="in_store"]           [data-themes]:not([data-themes~="in_store"]),
+[data-active-theme="online_campaign"]    [data-themes]:not([data-themes~="online_campaign"]),
+[data-active-theme="ooh_campaign"]       [data-themes]:not([data-themes~="ooh_campaign"]) {
+  display: none;
+}
+
+/* Filter panel — the three category groups (Product / Distribution / Visibility). */
+.filter-panel-title {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid transparent;
+  color: #0a0a0a;
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.filter-panel-title:hover { color: #6b6b6b; }
+.filter-panel-title[data-active] { background: #0a0a0a; color: #ffffff; }
+
+/* Static (display-only) facet chips — the broader filter vocabulary. */
+.facet-chip {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #e5e5e5;
+  color: #a3a3a3;
+  background: #fafafa;
+}
+

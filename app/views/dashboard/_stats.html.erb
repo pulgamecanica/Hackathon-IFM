@@ -10,7 +10,7 @@
           stats.average_overall ? "text-grad-satisfaction" : ""],
        ].each do |label, value, value_class| %>
       <div class="px-6 py-8 text-center">
-        <div class="font-serif text-5xl font-light leading-none <%= value_class %>"><%= value %></div>
+        <div class="font-numeric text-4xl leading-none <%= value_class %>"><%= value %></div>
         <div class="mt-3 text-[10px] uppercase tracking-[0.25em] text-neutral-500"><%= label %></div>
       </div>
     <% end %>
@@ -30,7 +30,7 @@
                style="width: <%= (count / total * 100).round %>%" title="<%= label %>: <%= count %>"></div>
         <% end %>
       </div>
-      <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 shrink-0"><%= stats.synthetic_share %>% Synthetic</span>
+      <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 shrink-0"><span class="font-numeric"><%= stats.synthetic_share %></span>% Synthetic</span>
     </div>
   <% end %>
 </div>

@@ -1,0 +1,11 @@
+<%# Default procedural charts — replaced live by DashboardBroadcaster.refresh. %>
+<div id="charts" class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-neutral-200 border border-neutral-200">
+  <%= render "dashboard/chart", kind: "sentiment_by_focus", chart_data: chart_data,
+             title: "Sentiment by Focus", chart_index: "01" %>
+  <%= render "dashboard/chart", kind: "rating_by_product", chart_data: chart_data,
+             title: "Rating by Product", chart_index: "02" %>
+  <div class="lg:col-span-2">
+    <%= render "dashboard/chart", kind: "focus_distribution", chart_data: chart_data,
+               title: "Focus Distribution", chart_index: "03" %>
+  </div>
+</div>

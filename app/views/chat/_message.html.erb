@@ -10,7 +10,7 @@
       <p class="text-[15px] leading-relaxed text-neutral-800 font-serif"><%= answer.text %></p>
       <div class="mt-2.5 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-neutral-400">
         <span class="border border-neutral-200 px-2 py-0.5 text-neutral-600"><%= answer.filters_description %></span>
-        <span><%= answer.count %> match<%= "es" unless answer.count == 1 %></span>
+        <span><span class="font-numeric"><%= answer.count %></span> match<%= "es" unless answer.count == 1 %></span>
         <span class="ml-auto"><%= answer.source %></span>
       </div>
     </div>
