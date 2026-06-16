@@ -37,9 +37,17 @@
           <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full" style="background:#fb7185"></span>negative</span>
         </div>
       </div>
-      <div data-controller="map"
-           data-map-url-value="<%= map_data_path %>"
-           class="h-80 w-full rounded-xl border border-slate-800 overflow-hidden z-0"></div>
+      <div data-controller="map" data-map-url-value="<%= map_data_path %>"
+           class="relative rounded-xl border border-slate-800 overflow-hidden bg-slate-900">
+        <button type="button" data-action="map#toggleFullscreen" data-map-target="fullscreenButton"
+                class="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 rounded-lg border border-slate-700
+                       bg-slate-900/80 px-2.5 py-1.5 text-xs font-medium text-slate-200 backdrop-blur
+                       hover:bg-slate-800 hover:border-slate-600 transition">
+          <span data-map-target="fullscreenIcon">⛶</span>
+          <span data-map-target="fullscreenLabel">Fullscreen</span>
+        </button>
+        <div data-map-target="canvas" class="h-80 w-full z-0"></div>
+      </div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

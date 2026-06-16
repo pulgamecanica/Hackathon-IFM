@@ -46,13 +46,14 @@ puts "Seeding locations..."
   { name: "SF Kiosk",        city: "San Francisco", country_code: "US", lat: 37.7749, long: -122.4194, type: :kiosk },
   { name: "EU Warehouse",    city: "Rotterdam",  country_code: "NL", lat: 51.9244,  long: 4.4777,   type: :warehouse }
 ].each do |attrs|
-  Location.find_or_create_by!(name: attrs[:name]) do |l|
-    l.city = attrs[:city]
-    l.country_code = attrs[:country_code]
-    l.lat = attrs[:lat]
-    l.long = attrs[:long]
-    l.location_type = attrs[:type]
-  end
+  location = Location.find_or_initialize_by(name: attrs[:name])
+  location.update!(
+    city: attrs[:city],
+    country_code: attrs[:country_code],
+    lat: attrs[:lat],
+    long: attrs[:long],
+    location_type: attrs[:type]
+  )
 end
 
 puts "Seeding vendors..."

@@ -7,6 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 // sentiment. The controller polls the map_data endpoint so markers stay live
 // as synthetic feedback streams in — no page reload.
 export default class extends Controller {
+  static targets = ["canvas", "fullscreenIcon", "fullscreenLabel"]
   static values = {
     url: String,
     refreshInterval: { type: Number, default: 5000 }
@@ -17,21 +18,44 @@ export default class extends Controller {
     this.initMap()
     this.refresh()
     this.timer = setInterval(() => this.refresh(), this.refreshIntervalValue)
+    this.onFullscreenChange = this.handleFullscreenChange.bind(this)
+    document.addEventListener("fullscreenchange", this.onFullscreenChange)
   }
 
   disconnect() {
     clearInterval(this.timer)
+    document.removeEventListener("fullscreenchange", this.onFullscreenChange)
     if (this.map) this.map.remove()
   }
 
   initMap() {
-    this.map = L.map(this.element, { worldCopyJump: true, attributionControl: false })
+    this.map = L.map(this.canvasTarget, { worldCopyJump: true, attributionControl: false })
       .setView([25, 5], 2)
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       subdomains: "abcd"
     }).addTo(this.map)
+  }
+
+  toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      this.element.requestFullscreen()
+    }
+  }
+
+  // Fill the screen in fullscreen, restore the fixed height when exiting, and
+  // tell Leaflet to recompute its size so tiles fill the new viewport.
+  handleFullscreenChange() {
+    const active = document.fullscreenElement === this.element
+    this.canvasTarget.classList.toggle("h-80", !active)
+    this.canvasTarget.classList.toggle("h-screen", active)
+    if (this.hasFullscreenIconTarget) this.fullscreenIconTarget.textContent = active ? "✕" : "⛶"
+    if (this.hasFullscreenLabelTarget) this.fullscreenLabelTarget.textContent = active ? "Exit" : "Fullscreen"
+    // Leaflet needs a tick after the layout change before invalidating size.
+    setTimeout(() => this.map.invalidateSize(), 100)
   }
 
   async refresh() {
