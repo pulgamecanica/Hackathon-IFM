@@ -7,8 +7,9 @@ class FeedbackQuery
   Result = Struct.new(:insights, :count, :avg_sentiment, :sentiment_breakdown,
                       :focus_breakdown, keyword_init: true)
 
-  def initialize(filters)
+  def initialize(filters, base: AiInsight.all)
     @filters = filters
+    @base = base
   end
 
   def call
@@ -26,7 +27,7 @@ class FeedbackQuery
   private
 
   def base_scope
-    scope = AiInsight.includes(raw_feedback: %i[location products])
+    scope = @base.includes(raw_feedback: %i[location products])
     scope = scope.where(sentiment: @filters.sentiment) if @filters.sentiment
     scope = scope.where(focus: @filters.focus) if @filters.focus
     scope = scope.where(synthetic: @filters.synthetic) unless @filters.synthetic.nil?

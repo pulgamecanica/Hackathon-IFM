@@ -1,21 +1,25 @@
-# Aggregates the headline numbers shown on the dashboard.
-#
-# Used by DashboardController#index for the initial render and by
-# DashboardBroadcaster to push an updated stats panel over Turbo Streams
-# whenever feedback is ingested or finishes processing.
+# Headline numbers for the dashboard — all derived from the active filter's
+# scopes, so the figures reflect exactly what the analyst has filtered to.
 class DashboardStats
-  def total_feedback   = RawFeedback.count
-  def processed        = RawFeedback.processed.count
-  def pending          = RawFeedback.where(processing_status: %i[pending processing]).count
-  def synthetic_share  = total_feedback.zero? ? 0 : ((RawFeedback.synthetic.count.to_f / total_feedback) * 100).round
-  def insights         = AiInsight.count
-
-  def average_overall
-    Rating.overall.average(:score)&.round(2)
+  def initialize(filter = FeedbackFilter.new)
+    @filter = filter
   end
 
-  # { "positive" => 12, "neutral" => 3, ... } for the sentiment bar.
+  def total_feedback = @filter.feedbacks.count
+  def processed      = @filter.feedbacks.where(processing_status: :processed).count
+  def pending        = @filter.feedbacks.where(processing_status: %i[pending processing]).count
+  def insights       = @filter.insights.count
+
+  def synthetic_share
+    total = total_feedback
+    total.zero? ? 0 : ((@filter.feedbacks.where(synthetic: true).count.to_f / total) * 100).round
+  end
+
+  def average_overall
+    @filter.ratings.where(dimension: :overall).average(:score)&.round(2)
+  end
+
   def sentiment_breakdown
-    AiInsight.group(:sentiment).count.transform_keys { AiInsight.sentiments.key(_1) || _1.to_s }
+    @filter.insights.group(:sentiment).count.transform_keys { |k| AiInsight.sentiments.key(k) || k.to_s }
   end
 end

@@ -25,7 +25,9 @@ class StubAiAnalyzer
   # group becomes the insight's focus.
   FOCUS_THEMES = {
     product: {
-      "material" => %w[material fabric silk cashmere leather wool textile],
+      # Note: fabric-type words (silk/leather/…) are intentionally excluded —
+      # they appear in product names and would over-match.
+      "material" => %w[material fabric textile woven],
       "fit"      => %w[fit sizing size tailoring],
       "color"    => %w[color colour shade hue],
       "design"   => %w[design silhouette cut aesthetic],

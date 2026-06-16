@@ -20,13 +20,15 @@ class FeedbackChatbot
     count is zero, say no matching feedback was found. Be concise and concrete.
   PROMPT
 
-  def initialize(question)
+  def initialize(question, dashboard_filter: FeedbackFilter.new)
     @question = question.to_s.strip
+    @dashboard_filter = dashboard_filter
   end
 
   def call
     filters = FeedbackFilterParser.new(@question).call
-    result = FeedbackQuery.new(filters).call
+    # The chatbot answers within the dashboard's currently-applied filters.
+    result = FeedbackQuery.new(filters, base: @dashboard_filter.insights).call
 
     text, source = compose_answer(filters, result)
     Answer.new(
@@ -54,9 +56,10 @@ class FeedbackChatbot
     <<~PROMPT
       Question: #{@question}
 
-      Interpreted filters: #{filters.describe}
+      Active dashboard filters (data is already restricted to these): #{@dashboard_filter.description}
+      Interpreted filters from the question: #{filters.describe}
 
-      Aggregated results (JSON):
+      Aggregated results (JSON), already within the dashboard filters:
       #{summary_json(result)}
     PROMPT
   end

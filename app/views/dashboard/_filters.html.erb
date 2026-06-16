@@ -12,9 +12,16 @@
     ] }
   ]
   facets = ["Zone", "Customers Nationality", "Customers Age", "Collection (SS26…)",
-            "Function", "Line", "SKU", "# Respondants", "High / Low"]
+            "Function", "Line", "# Respondants", "High / Low"]
   sentiments = [["All", "all"], ["Positive", "positive"], ["Neutral", "neutral"], ["Negative", "negative"], ["Mixed", "mixed"]]
+  products = Product.active.order(:name)
 %>
+
+<%# Hidden state submitted to the server on every filter change. %>
+<%= hidden_field_tag :focus, filter.focus %>
+<%= hidden_field_tag :theme, filter.theme %>
+<%= hidden_field_tag :sentiment, filter.sentiment %>
+<%= hidden_field_tag :sku, filter.sku %>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
@@ -30,28 +37,46 @@
     <% end %>
   </div>
 
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-10">
+    <%# SKU — functional, one chip per piece %>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">SKU</span>
+      <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+              data-filter-group-param="sku" data-filter-value-param="all"
+              <%= "data-active data-filter-default" if filter.sku.blank? %>>All</button>
+      <% products.each do |product| %>
+        <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+                data-filter-group-param="sku" data-filter-value-param="<%= product.sku %>"
+                <%= "data-active" if filter.sku == product.sku %>><%= product.name %></button>
+      <% end %>
+    </div>
+  </div>
+
   <%# Type of feedback — functional sentiment filter %>
   <div class="flex flex-wrap items-center gap-2">
     <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Type of Feedback</span>
-    <% sentiments.each_with_index do |(label, value), i| %>
+    <% sentiments.each do |label, value| %>
+      <% active = (value == "all" && filter.sentiment.blank?) || filter.sentiment == value %>
       <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
               data-filter-group-param="sentiment" data-filter-value-param="<%= value %>"
-              <%= "data-active data-filter-default" if i.zero? %>><%= label %></button>
+              <%= "data-active" if active %><%= " data-filter-default" if value == "all" %>><%= label %></button>
     <% end %>
   </div>
 
-  <%# Three category groups, each a focus selector with its own sub-filters %>
+  <%# Three category groups — each a focus selector with its own sub-filters %>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-neutral-200 border border-neutral-200">
     <% panels.each do |panel| %>
       <div class="bg-white p-5">
         <button type="button" class="filter-panel-title" data-filter-target="chip" data-action="filter#apply"
-                data-filter-group-param="focus" data-filter-value-param="<%= panel[:focus] %>">
+                data-filter-group-param="focus" data-filter-value-param="<%= panel[:focus] %>"
+                <%= "data-active" if filter.focus == panel[:focus] %>>
           <%= panel[:title] %>
         </button>
         <div class="mt-4 flex flex-wrap gap-2">
           <% panel[:themes].each do |label, value| %>
             <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
-                    data-filter-group-param="theme" data-filter-value-param="<%= value %>"><%= label %></button>
+                    data-filter-group-param="theme" data-filter-value-param="<%= value %>"
+                    <%= "data-active" if filter.theme == value %>><%= label %></button>
           <% end %>
         </div>
       </div>

@@ -1,4 +1,4 @@
-<%# Subscribes to the broadcast channel; every ingest/analysis pushes updates here. %>
+<%# Subscribes to the broadcast channel; new feedback streams into the feed live. %>
 <%= turbo_stream_from "feedback_stream" %>
 
 <% content_for :head do %>
@@ -18,69 +18,82 @@
           <span class="h-1.5 w-1.5 rounded-full bg-neutral-900 animate-pulse"></span>Live
         </span>
       </div>
-      <div class="mt-6 text-center">
-        <h1 class="font-serif text-6xl sm:text-7xl font-light tracking-[0.35em] pl-[0.35em]">LUMA</h1>
-        <p class="mt-3 text-[11px] uppercase tracking-[0.45em] text-neutral-500">Feedback Intelligence</p>
+      <div class="mt-4 flex flex-col items-center">
+        <%# Square logo cropped to its central band via object-cover. %>
+        <img src="/luma-logo.png" alt="LUMA"
+             class="h-16 sm:h-20 w-80 sm:w-96 max-w-full object-cover object-center">
+        <p class="mt-2 text-[11px] uppercase tracking-[0.45em] text-neutral-500">Feedback Intelligence</p>
       </div>
     </div>
   </header>
 
-  <main class="mx-auto max-w-7xl px-6 py-12 space-y-14">
-    <%= render "dashboard/stats", stats: @stats %>
+  <main class="mx-auto max-w-7xl px-6 py-12">
+    <%# data-active-* lives here (an ancestor of every card) so the CSS filter also
+        hides any non-matching card streamed in live, on top of server filtering. %>
+    <div data-controller="filter"
+         data-active-focus="<%= @filter.focus || "all" %>"
+         data-active-theme="<%= @filter.theme || "all" %>"
+         data-active-sentiment="<%= @filter.sentiment || "all" %>"
+         data-active-sku="<%= @filter.sku || "all" %>">
 
-    <%# ---- Map ---- %>
-    <section>
-      <div class="mb-5 flex items-end justify-between border-b border-neutral-200 pb-3">
-        <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">The Atelier — by Location</h2>
-        <div class="flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-positive"></span>Positive</span>
-          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-neutral"></span>Neutral</span>
-          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-negative"></span>Negative</span>
+      <%# ---- Filters (top, drive everything below) ---- %>
+      <%= form_with url: dashboard_path, method: :get,
+                    data: { filter_target: "form", turbo_frame: "dashboard-body" } do %>
+        <%= render "dashboard/filters", filter: @filter %>
+      <% end %>
+
+      <%# ---- All data — reloaded as a frame whenever a filter changes ---- %>
+      <turbo-frame id="dashboard-body" class="block mt-12 space-y-14">
+        <%= render "dashboard/stats", stats: @stats %>
+
+        <section>
+          <div class="mb-5 flex items-end justify-between border-b border-neutral-200 pb-3">
+            <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">The Atelier — by Location</h2>
+            <div class="flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-positive"></span>Positive</span>
+              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-neutral"></span>Neutral</span>
+              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full grad-negative"></span>Negative</span>
+            </div>
+          </div>
+          <div data-controller="map" data-map-url-value="<%= map_data_path(@filter.to_params) %>"
+               class="relative border border-neutral-200 bg-white overflow-hidden">
+            <button type="button" data-action="map#toggleFullscreen" data-map-target="fullscreenButton"
+                    class="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 border border-neutral-300
+                           bg-white/90 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-neutral-700
+                           hover:border-neutral-900 hover:text-neutral-900 transition">
+              <span data-map-target="fullscreenIcon">⛶</span>
+              <span data-map-target="fullscreenLabel">Fullscreen</span>
+            </button>
+            <div data-map-target="canvas" class="h-80 w-full z-0"></div>
+          </div>
+        </section>
+
+        <%= render "dashboard/analytics", insights: @insights %>
+
+        <%= render "dashboard/charts" %>
+
+        <%= render "dashboard/chat", filter: @filter %>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <section>
+            <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">Incoming Feedback</h2>
+            <div id="feed" class="divide-y divide-neutral-200 border-y border-neutral-200">
+              <% @raw_feedbacks.each do |raw_feedback| %>
+                <%= render "dashboard/raw_feedback", raw_feedback: raw_feedback %>
+              <% end %>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">AI Insights</h2>
+            <div id="insights" class="divide-y divide-neutral-200 border-y border-neutral-200">
+              <% @ai_insights.each do |ai_insight| %>
+                <%= render "dashboard/ai_insight", ai_insight: ai_insight %>
+              <% end %>
+            </div>
+          </section>
         </div>
-      </div>
-      <div data-controller="map" data-map-url-value="<%= map_data_path %>"
-           class="relative border border-neutral-200 bg-white overflow-hidden">
-        <button type="button" data-action="map#toggleFullscreen" data-map-target="fullscreenButton"
-                class="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 border border-neutral-300
-                       bg-white/90 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-neutral-700
-                       hover:border-neutral-900 hover:text-neutral-900 transition">
-          <span data-map-target="fullscreenIcon">⛶</span>
-          <span data-map-target="fullscreenLabel">Fullscreen</span>
-        </button>
-        <div data-map-target="canvas" class="h-80 w-full z-0"></div>
-      </div>
-    </section>
-
-    <%= render "dashboard/analytics", insights: @insights %>
-
-    <%= render "dashboard/chat" %>
-
-    <%= render "dashboard/charts" %>
-
-    <div data-controller="filter">
-      <div class="mb-6 border-b border-neutral-200 pb-4">
-        <%= render "dashboard/filters" %>
-      </div>
-      <div data-filter-target="region" data-active-focus="all" data-active-sentiment="all" data-active-theme="all"
-           class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-      <section>
-        <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">Incoming Feedback</h2>
-        <div id="feed" class="divide-y divide-neutral-200 border-y border-neutral-200">
-          <% @raw_feedbacks.each do |raw_feedback| %>
-            <%= render "dashboard/raw_feedback", raw_feedback: raw_feedback %>
-          <% end %>
-        </div>
-      </section>
-
-      <section>
-        <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">AI Insights</h2>
-        <div id="insights" class="divide-y divide-neutral-200 border-y border-neutral-200">
-          <% @ai_insights.each do |ai_insight| %>
-            <%= render "dashboard/ai_insight", ai_insight: ai_insight %>
-          <% end %>
-        </div>
-      </section>
-      </div>
+      </turbo-frame>
     </div>
   </main>
 

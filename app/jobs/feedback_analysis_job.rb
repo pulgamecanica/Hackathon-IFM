@@ -74,7 +74,6 @@ class FeedbackAnalysisJob < ApplicationJob
       "feedback_stream", target: "insights",
       partial: "dashboard/ai_insight", locals: { ai_insight: insight }
     )
-    DashboardBroadcaster.refresh
   end
 
   def dom_id(record)

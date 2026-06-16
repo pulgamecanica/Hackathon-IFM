@@ -12,7 +12,7 @@ class ChartSpecGenerator
   }.freeze
 
   Spec = Struct.new(:kind, :focus, :title, :source, keyword_init: true) do
-    def chart_data = ChartData.new(focus: focus)
+    def chart_data = ChartData.new(FeedbackFilter.new(focus: focus))
   end
 
   SYSTEM_PROMPT = <<~PROMPT.freeze

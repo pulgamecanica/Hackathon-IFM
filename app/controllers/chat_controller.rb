@@ -9,7 +9,8 @@ class ChatController < ApplicationController
       return
     end
 
-    @answer = FeedbackChatbot.new(question).call
+    @filter = FeedbackFilter.from_params(params)
+    @answer = FeedbackChatbot.new(question, dashboard_filter: @filter).call
 
     respond_to do |format|
       format.turbo_stream

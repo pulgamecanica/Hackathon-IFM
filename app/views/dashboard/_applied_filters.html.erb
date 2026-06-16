@@ -1,0 +1,10 @@
+<div class="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.18em]">
+  <span class="text-neutral-400">Applied Filters</span>
+  <% if filter.active? %>
+    <% filter.chips.each do |label, value| %>
+      <span class="bg-neutral-900 text-white px-2 py-0.5"><%= label %>: <%= value %></span>
+    <% end %>
+  <% else %>
+    <span class="text-neutral-500">None — asking across all feedback</span>
+  <% end %>
+</div>

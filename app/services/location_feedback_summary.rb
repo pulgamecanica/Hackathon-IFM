@@ -1,17 +1,20 @@
-# Aggregates feedback metrics per geocoded location for the live map.
-#
-# Returns one entry per location that has coordinates, including locations with
-# zero feedback (so the full footprint is always visible on the map).
+# Aggregates feedback metrics per geocoded location for the live map, scoped to
+# the active filter. Returns one entry per location with coordinates (including
+# zero-feedback locations so the full footprint stays visible).
 class LocationFeedbackSummary
-  def self.as_json = new.as_json
+  def self.as_json(filter = FeedbackFilter.new) = new(filter).as_json
+
+  def initialize(filter = FeedbackFilter.new)
+    @filter = filter
+  end
 
   def as_json
-    counts = RawFeedback.where.not(location_id: nil).group(:location_id).count
-    avg_sentiment = AiInsight
-                    .joins(:raw_feedback)
-                    .where.not(raw_feedbacks: { location_id: nil })
-                    .group("raw_feedbacks.location_id")
-                    .average(:sentiment_score)
+    counts = @filter.feedbacks.where.not(location_id: nil).group(:location_id).count
+    avg_sentiment = @filter.insights
+                           .joins(:raw_feedback)
+                           .where.not(raw_feedbacks: { location_id: nil })
+                           .group("raw_feedbacks.location_id")
+                           .average(:sentiment_score)
 
     Location.where.not(lat: nil).map do |location|
       count = counts[location.id] || 0
