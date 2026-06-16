@@ -1,0 +1,42 @@
+<%# Replaced in place on every ingest/analysis via DashboardStats.broadcast_refresh. %>
+<div id="stats" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+  <% [
+       ["Total Feedback", stats.total_feedback, "text-slate-100"],
+       ["Processed", stats.processed, "text-emerald-400"],
+       ["In Queue", stats.pending, "text-amber-400"],
+       ["Insights", stats.insights, "text-sky-400"],
+     ].each do |label, value, color| %>
+    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div class="text-2xl font-semibold <%= color %>"><%= value %></div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mt-1"><%= label %></div>
+    </div>
+  <% end %>
+
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <div class="text-2xl font-semibold text-violet-400">
+      <%= stats.average_overall ? number_with_precision(stats.average_overall, precision: 2) : "—" %>
+    </div>
+    <div class="text-xs uppercase tracking-wider text-slate-500 mt-1">Avg Rating</div>
+  </div>
+
+  <% if stats.sentiment_breakdown.any? %>
+    <div class="col-span-2 md:col-span-5 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs uppercase tracking-wider text-slate-500">Sentiment</span>
+        <span class="text-xs text-slate-500"><%= stats.synthetic_share %>% synthetic</span>
+      </div>
+      <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+        <%
+          colors = { "positive" => "bg-emerald-500", "neutral" => "bg-slate-500",
+                     "negative" => "bg-rose-500", "mixed" => "bg-amber-500" }
+          total = stats.sentiment_breakdown.values.sum.to_f
+        %>
+        <% stats.sentiment_breakdown.each do |label, count| %>
+          <div class="<%= colors[label] || "bg-slate-600" %>"
+               style="width: <%= (count / total * 100).round %>%"
+               title="<%= label %>: <%= count %>"></div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,45 @@
+<%# Subscribes to the broadcast channel; every ingest/analysis pushes updates here. %>
+<%= turbo_stream_from "feedback_stream" %>
+
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-6 py-5 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight">Feedback Intelligence</h1>
+        <p class="text-sm text-slate-400">Real-time ingestion &middot; AI insights &middot; product ratings</p>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span class="text-slate-300">Live</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-6 py-8 space-y-8">
+    <%= render "dashboard/stats", stats: @stats %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section>
+        <h2 class="mb-3 text-sm font-medium uppercase tracking-wider text-slate-400">Incoming Feedback</h2>
+        <div id="feed" class="space-y-3">
+          <% @raw_feedbacks.each do |raw_feedback| %>
+            <%= render "dashboard/raw_feedback", raw_feedback: raw_feedback %>
+          <% end %>
+          <p class="empty:block hidden text-slate-500 text-sm">Waiting for feedback…</p>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-sm font-medium uppercase tracking-wider text-slate-400">AI Insights</h2>
+        <div id="insights" class="space-y-3">
+          <% @ai_insights.each do |ai_insight| %>
+            <%= render "dashboard/ai_insight", ai_insight: ai_insight %>
+          <% end %>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
