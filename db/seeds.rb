@@ -36,9 +36,23 @@ web_source = Source.find_or_create_by!(adapter_key: "web_form") do |s|
 end
 
 puts "Seeding locations..."
-Location.find_or_create_by!(name: "HQ Store", location_type: :store) do |l|
-  l.city = "New York"
-  l.country_code = "US"
+# Real coordinates so feedback can be plotted on a live map.
+[
+  { name: "HQ Store",        city: "New York",   country_code: "US", lat: 40.7128,  long: -74.0060, type: :store },
+  { name: "London Flagship", city: "London",     country_code: "GB", lat: 51.5074,  long: -0.1278,  type: :store },
+  { name: "Paris Boutique",  city: "Paris",      country_code: "FR", lat: 48.8566,  long: 2.3522,   type: :store },
+  { name: "Berlin Outlet",   city: "Berlin",     country_code: "DE", lat: 52.5200,  long: 13.4050,  type: :store },
+  { name: "Tokyo Pop-up",    city: "Tokyo",      country_code: "JP", lat: 35.6762,  long: 139.6503, type: :popup },
+  { name: "SF Kiosk",        city: "San Francisco", country_code: "US", lat: 37.7749, long: -122.4194, type: :kiosk },
+  { name: "EU Warehouse",    city: "Rotterdam",  country_code: "NL", lat: 51.9244,  long: 4.4777,   type: :warehouse }
+].each do |attrs|
+  Location.find_or_create_by!(name: attrs[:name]) do |l|
+    l.city = attrs[:city]
+    l.country_code = attrs[:country_code]
+    l.lat = attrs[:lat]
+    l.long = attrs[:long]
+    l.location_type = attrs[:type]
+  end
 end
 
 puts "Seeding vendors..."

@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   # Live feedback intelligence dashboard.
   get "dashboard" => "dashboard#index", as: :dashboard
+  get "dashboard/map_data" => "dashboard#map_data", as: :map_data
 
   # Real-time ingestion API (stub feeder + real external sources POST here).
   namespace :api do

@@ -46,10 +46,35 @@ creating and migrating the primary, cache, queue, and cable databases.
 
 ## Subsequent deploys
 
+Pushing to `main` deploys automatically (see below). To deploy by hand:
+
 ```bash
 git commit -am "..."     # Kamal versions the image from the git SHA
 bin/kamal deploy
 ```
+
+## Continuous deployment (GitHub Actions)
+
+`.github/workflows/deploy.yml` runs after the **CI** workflow succeeds on `main`
+(and can be run manually via the Actions tab → Deploy → Run workflow). It builds
+and pushes the image to ghcr.io using the Actions `GITHUB_TOKEN`, then runs
+`bin/kamal deploy` over SSH.
+
+The runner needs the `config/master.key` and `.kamal/db_password` files, which are
+gitignored — the workflow recreates them from repository secrets. Set these three
+secrets once (the fourth, `GITHUB_TOKEN`, is provided automatically):
+
+```bash
+gh secret set RAILS_MASTER_KEY   < config/master.key
+gh secret set POSTGRES_PASSWORD  < .kamal/db_password
+gh secret set SSH_PRIVATE_KEY    < ~/.ssh/id_ed25519   # key whose PUBLIC half is in the server's root authorized_keys
+```
+
+> The CI workflow's `GITHUB_TOKEN` automatically has `packages: write` for images
+> under `ghcr.io/pulgamecanica/*`, so no PAT is needed in CI.
+
+CD only handles redeploys. The one-time server provisioning (`kamal accessory boot db`
++ `kamal setup`) must be run manually first, as described above.
 
 ## Handy commands
 

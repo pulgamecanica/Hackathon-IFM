@@ -1,0 +1,65 @@
+name: Deploy
+
+# Deploy to production after CI passes on main. Can also be triggered manually.
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+
+# Never run two deploys at once.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # On workflow_run, only deploy if CI actually succeeded (skip on manual dispatch where there is no upstream run).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    permissions:
+      contents: read
+      packages: write   # push the image to ghcr.io
+
+    env:
+      # Registry password consumed by .kamal/secrets (gh is unauthenticated on the
+      # runner, so it falls through to this Actions token).
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # Kamal derives the image version from git history
+
+      - name: Materialize deploy secrets into the files .kamal/secrets reads
+        env:
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          umask 077
+          printf '%s' "$RAILS_MASTER_KEY" > config/master.key
+          printf '%s' "$DB_PASSWORD" > .kamal/db_password
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 209.38.240.185 >> ~/.ssh/known_hosts
+
+      - name: Deploy with Kamal
+        run: bin/kamal deploy

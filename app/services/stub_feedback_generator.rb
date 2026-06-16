@@ -24,8 +24,9 @@ class StubFeedbackGenerator
   # Returns a Hash ready to be sent as the JSON request body.
   def self.payload(...) = new(...).payload
 
-  def initialize(products: nil)
+  def initialize(products: nil, locations: nil)
     @products = products || Product.active.to_a
+    @locations = locations || Location.where.not(lat: nil).to_a
   end
 
   def payload
@@ -33,6 +34,7 @@ class StubFeedbackGenerator
     {
       content: render_content(chosen),
       product_ids: chosen.map(&:id),
+      location_id: @locations.sample&.id,
       channel: CHANNELS.sample,
       language: LANGUAGES.sample
     }

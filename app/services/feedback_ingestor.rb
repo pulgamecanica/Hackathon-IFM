@@ -65,6 +65,7 @@ class FeedbackIngestor
       source: source,
       synthetic: source.synthetic?,
       content: @params[:content],
+      location_id: @params[:location_id].presence,
       feedback_content_type: @params[:feedback_content_type].presence || :text,
       channel: @params[:channel].presence || (source.synthetic? ? :synthetic_channel : :api),
       language: @params[:language].presence || "en",

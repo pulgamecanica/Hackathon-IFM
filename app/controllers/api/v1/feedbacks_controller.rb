@@ -23,7 +23,7 @@ module Api
 
       def feedback_params
         params.permit(
-          :content, :channel, :language, :feedback_content_type, :source_adapter_key,
+          :content, :channel, :language, :feedback_content_type, :source_adapter_key, :location_id,
           product_ids: [], metadata: {}
         )
       end
