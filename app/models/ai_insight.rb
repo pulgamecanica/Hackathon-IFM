@@ -19,6 +19,11 @@ class AiInsight < ApplicationRecord
   # sentiment: 0=negative, 1=neutral, 2=positive, 3=mixed
   enum :sentiment, { negative: 0, neutral: 1, positive: 2, mixed: 3 }, validate: true
 
+  # The three feedback points the business tracks. prefix avoids clashing with
+  # the `products` delegation and keeps scopes explicit (e.g. focus_product).
+  # focus: 0=product, 1=distribution, 2=visibility
+  enum :focus, { product: 0, distribution: 1, visibility: 2 }, prefix: true, validate: true
+
   validates :raw_feedback, presence: true
   validates :model_version, presence: true
   validates :generated_at, presence: true
@@ -28,5 +33,7 @@ class AiInsight < ApplicationRecord
   scope :synthetic, -> { where(synthetic: true) }
   scope :real, -> { where(synthetic: false) }
   scope :by_sentiment, ->(s) { where(sentiment: s) }
+  scope :by_focus, ->(f) { where(focus: f) }
+  scope :negative_sentiment, -> { where(sentiment: :negative) }
   scope :recent, -> { order(generated_at: :desc) }
 end

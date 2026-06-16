@@ -32,7 +32,9 @@ export default class extends Controller {
     this.map = L.map(this.canvasTarget, { worldCopyJump: true, attributionControl: false })
       .setView([25, 5], 2)
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    // Light, label-light base tiles. The .leaflet-tile-pane CSS rule grayscales
+    // the tiles while leaving the colored sentiment markers untouched.
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       subdomains: "abcd"
     }).addTo(this.map)
@@ -70,32 +72,32 @@ export default class extends Controller {
   }
 
   upsertMarker(loc) {
-    const color = this.colorFor(loc.sentiment_label)
-    const radius = 6 + Math.min(loc.feedback_count, 40) * 0.9
+    const style = this.styleFor(loc.sentiment_label)
+    const radius = 5 + Math.min(loc.feedback_count, 40) * 0.85
     const popup = `<strong>${loc.name}</strong><br>${loc.city || ""}<br>` +
       `${loc.feedback_count} feedback` +
       (loc.avg_sentiment != null ? `<br>sentiment ${loc.avg_sentiment.toFixed(2)}` : "")
 
     const existing = this.markers.get(loc.id)
     if (existing) {
-      existing.setRadius(radius).setStyle({ fillColor: color, color })
+      existing.setRadius(radius).setStyle(style)
       existing.getPopup().setContent(popup)
       return
     }
 
-    const marker = L.circleMarker([loc.lat, loc.long], {
-      radius, color, fillColor: color, fillOpacity: 0.6, weight: 2
-    }).addTo(this.map).bindPopup(popup)
+    const marker = L.circleMarker([loc.lat, loc.long], { radius, ...style })
+      .addTo(this.map).bindPopup(popup)
 
     this.markers.set(loc.id, marker)
   }
 
-  colorFor(label) {
+  // Jewel-tone sentiment markers — the only color on the grayscale map.
+  styleFor(label) {
     return {
-      positive: "#34d399",
-      neutral: "#94a3b8",
-      negative: "#fb7185",
-      none: "#475569"
-    }[label] || "#475569"
+      positive: { color: "#065f46", fillColor: "#059669", fillOpacity: 0.9, weight: 1.5 },
+      neutral:  { color: "#475569", fillColor: "#94a3b8", fillOpacity: 0.85, weight: 1.5 },
+      negative: { color: "#9f1239", fillColor: "#e11d48", fillOpacity: 0.9, weight: 1.5 },
+      none:     { color: "#a3a3a3", fillColor: "#ffffff", fillOpacity: 1, weight: 1 }
+    }[label] || { color: "#a3a3a3", fillColor: "#ffffff", fillOpacity: 1, weight: 1 }
   }
 }

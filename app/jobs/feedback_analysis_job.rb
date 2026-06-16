@@ -39,6 +39,7 @@ class FeedbackAnalysisJob < ApplicationJob
       synthetic: raw_feedback.synthetic?,
       model_version: analysis.model_version,
       sentiment: analysis.sentiment,
+      focus: analysis.focus,
       sentiment_score: analysis.sentiment_score,
       summary: analysis.summary,
       key_themes: analysis.key_themes.join(", "),
@@ -73,7 +74,7 @@ class FeedbackAnalysisJob < ApplicationJob
       "feedback_stream", target: "insights",
       partial: "dashboard/ai_insight", locals: { ai_insight: insight }
     )
-    DashboardStats.broadcast_refresh
+    DashboardBroadcaster.refresh
   end
 
   def dom_id(record)

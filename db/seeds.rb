@@ -57,34 +57,35 @@ puts "Seeding locations..."
 end
 
 puts "Seeding vendors..."
-vendor = Vendor.find_or_create_by!(slug: "acme-corp") do |v|
-  v.name = "Acme Corp"
-  v.contact_email = "contact@acme.example.com"
-end
+# Upsert so reseeding refreshes the name even if the row already exists.
+vendor = Vendor.find_or_initialize_by(slug: "luma")
+vendor.update!(name: "LUMA", contact_email: "atelier@luma.example.com")
 
 puts "Seeding categories..."
-electronics = Category.find_or_create_by!(slug: "electronics") do |c|
-  c.name = "Electronics"
-  c.position = 0
-end
+apparel = Category.find_or_initialize_by(slug: "apparel")
+apparel.update!(name: "Apparel", position: 0)
+accessories = Category.find_or_initialize_by(slug: "accessories")
+accessories.update!(name: "Accessories", position: 1)
 
 puts "Seeding products..."
 [
-  { sku: "ACME-001", name: "Widget Pro",     slug: "widget-pro",     price_cents: 4999 },
-  { sku: "ACME-002", name: "Gadget Max",     slug: "gadget-max",     price_cents: 8999 },
-  { sku: "ACME-003", name: "Smart Hub Mini", slug: "smart-hub-mini", price_cents: 12999 },
-  { sku: "ACME-004", name: "Wireless Buds",  slug: "wireless-buds",  price_cents: 7999 },
-  { sku: "ACME-005", name: "Power Bank 20K", slug: "power-bank-20k", price_cents: 3499 }
+  { sku: "ML-COAT-01",  name: "Cashmere Wrap Coat",      slug: "cashmere-wrap-coat",      price_cents: 189000, cat: apparel },
+  { sku: "ML-DRESS-01", name: "Silk Slip Dress",         slug: "silk-slip-dress",         price_cents: 98000,  cat: apparel },
+  { sku: "ML-BLAZER-01", name: "Tailored Wool Blazer",   slug: "tailored-wool-blazer",    price_cents: 145000, cat: apparel },
+  { sku: "ML-BOOT-01",  name: "Leather Ankle Boots",     slug: "leather-ankle-boots",     price_cents: 76000,  cat: accessories },
+  { sku: "ML-BAG-01",   name: "Quilted Leather Handbag", slug: "quilted-leather-handbag", price_cents: 132000, cat: accessories },
+  { sku: "ML-SCARF-01", name: "Hand-Rolled Silk Scarf",  slug: "hand-rolled-silk-scarf",  price_cents: 32000,  cat: accessories }
 ].each do |attrs|
-  Product.find_or_create_by!(sku: attrs[:sku]) do |p|
-    p.vendor = vendor
-    p.category = electronics
-    p.name = attrs[:name]
-    p.slug = attrs[:slug]
-    p.price_cents = attrs[:price_cents]
-    p.currency = "USD"
-    p.status = :active
-  end
+  product = Product.find_or_initialize_by(sku: attrs[:sku])
+  product.update!(
+    vendor: vendor,
+    category: attrs[:cat],
+    name: attrs[:name],
+    slug: attrs[:slug],
+    price_cents: attrs[:price_cents],
+    currency: "EUR",
+    status: :active
+  )
 end
 
 puts "Seeding users..."

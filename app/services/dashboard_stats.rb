@@ -1,20 +1,9 @@
 # Aggregates the headline numbers shown on the dashboard.
 #
 # Used by DashboardController#index for the initial render and by
-# .broadcast_refresh to push an updated stats panel over Turbo Streams
+# DashboardBroadcaster to push an updated stats panel over Turbo Streams
 # whenever feedback is ingested or finishes processing.
 class DashboardStats
-  STREAM = "feedback_stream"
-
-  def self.broadcast_refresh
-    Turbo::StreamsChannel.broadcast_replace_to(
-      STREAM,
-      target: "stats",
-      partial: "dashboard/stats",
-      locals: { stats: new }
-    )
-  end
-
   def total_feedback   = RawFeedback.count
   def processed        = RawFeedback.processed.count
   def pending          = RawFeedback.where(processing_status: %i[pending processing]).count

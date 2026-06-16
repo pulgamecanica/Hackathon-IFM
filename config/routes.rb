@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   get "dashboard" => "dashboard#index", as: :dashboard
   get "dashboard/map_data" => "dashboard#map_data", as: :map_data
 
+  # Feedback chatbot — natural-language querying with filters.
+  post "chat" => "chat#create", as: :chat
+
   # Real-time ingestion API (stub feeder + real external sources POST here).
   namespace :api do
     namespace :v1 do

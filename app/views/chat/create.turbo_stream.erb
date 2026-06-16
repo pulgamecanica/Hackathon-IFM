@@ -1,0 +1,3 @@
+<%= turbo_stream.append "chat-log" do %>
+  <%= render "chat/message", answer: @answer %>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_101809) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_101809) do
   create_table "ai_insights", force: :cascade do |t|
     t.decimal "confidence", precision: 5, scale: 4
     t.datetime "created_at", null: false
+    t.integer "focus", default: 0, null: false
     t.datetime "generated_at", null: false
     t.text "key_themes"
     t.string "language_detected", limit: 10
@@ -56,6 +57,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_101809) do
     t.boolean "synthetic", default: false, null: false
     t.jsonb "topics", default: {}, null: false
     t.datetime "updated_at", null: false
+    t.index ["focus"], name: "index_ai_insights_on_focus"
     t.index ["generated_at"], name: "index_ai_insights_on_generated_at"
     t.index ["raw_feedback_id"], name: "index_ai_insights_on_raw_feedback_id", unique: true
     t.index ["sentiment"], name: "index_ai_insights_on_sentiment"

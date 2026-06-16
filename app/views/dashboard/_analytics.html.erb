@@ -1,0 +1,75 @@
+<%# Replaced live by DashboardBroadcaster.refresh on every ingest/analysis. %>
+<div id="analytics" class="grid grid-cols-1 lg:grid-cols-3 gap-px bg-neutral-200 border border-neutral-200">
+  <%# ---- Feedback Focus: the three tracked points ---- %>
+  <section class="bg-white p-8">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="font-serif text-2xl font-light text-neutral-300">I</span>
+      <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Feedback Focus</h2>
+    </div>
+    <div class="space-y-5">
+      <% insights.focus_breakdown.each do |row| %>
+        <div>
+          <div class="flex items-baseline justify-between">
+            <span class="text-sm uppercase tracking-[0.15em] text-neutral-800"><%= row[:focus] %></span>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400"><%= row[:count] %> · <%= row[:negative_share] %>% neg</span>
+          </div>
+          <%# Bar length = satisfaction level; color = overall sentiment for the point. %>
+          <% s = row[:avg_sentiment] %>
+          <% grad = s.nil? ? "grad-neutral" : (s > 0.2 ? "grad-positive" : (s < -0.2 ? "grad-negative" : "grad-neutral")) %>
+          <div class="mt-2 h-1.5 w-full bg-neutral-100 overflow-hidden">
+            <% pct = s ? (((s + 1) / 2.0) * 100).round : 0 %>
+            <div class="h-full <%= grad %>" style="width: <%= pct %>%"></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ---- Reasons for Negativity ---- %>
+  <section class="bg-white p-8">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="font-serif text-2xl font-light text-neutral-300">II</span>
+      <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Reasons for Negativity</h2>
+    </div>
+    <% reasons = insights.negativity_reasons %>
+    <% if reasons.empty? %>
+      <p class="text-sm text-neutral-400 italic font-serif">No negative feedback yet.</p>
+    <% else %>
+      <% max = reasons.first.last.to_f %>
+      <ul class="space-y-4">
+        <% reasons.each do |theme, count| %>
+          <li>
+            <div class="flex items-baseline justify-between">
+              <span class="text-sm uppercase tracking-[0.15em] text-neutral-800"><%= theme %></span>
+              <span class="font-serif text-lg text-neutral-900"><%= count %></span>
+            </div>
+            <div class="mt-1.5 h-1.5 w-full bg-neutral-100 overflow-hidden">
+              <div class="h-full grad-negative" style="width: <%= (count / max * 100).round %>%"></div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <%# ---- Key Insights ---- %>
+  <section class="bg-white p-8">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="font-serif text-2xl font-light text-neutral-300">III</span>
+      <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Key Insights</h2>
+    </div>
+    <% lines = insights.key_insights %>
+    <% if lines.empty? %>
+      <p class="text-sm text-neutral-400 italic font-serif">Insights appear as feedback is processed.</p>
+    <% else %>
+      <ul class="space-y-4">
+        <% lines.each do |line| %>
+          <li class="flex gap-3 text-[15px] leading-relaxed text-neutral-700 font-serif">
+            <span class="mt-2.5 h-px w-3 shrink-0 bg-neutral-900"></span>
+            <span><%= line %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+</div>

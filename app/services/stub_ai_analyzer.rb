@@ -7,6 +7,7 @@
 # Output contract:
 #   sentiment        -> Symbol matching AiInsight.sentiment enum
 #   sentiment_score  -> Float in [-1.0, 1.0]
+#   focus            -> Symbol matching AiInsight.focus enum (product/distribution/visibility)
 #   summary          -> String
 #   key_themes       -> Array<String>
 #   topics           -> Hash{String => Float}  (theme => weight, for ai_insights.topics jsonb)
@@ -14,17 +15,26 @@
 #   dimension_scores -> Hash{Symbol => Float}  (Rating.dimension => 1.0..5.0 score)
 #   model_version    -> String
 class StubAiAnalyzer
-  MODEL_VERSION = "stub-analyzer-v1"
+  MODEL_VERSION = "stub-analyzer-v2"
 
-  POSITIVE_WORDS = %w[great love excellent amazing perfect fast helpful reliable smooth brilliant].freeze
-  NEGATIVE_WORDS = %w[broke terrible slow awful hate disappointed defective late cheap useless].freeze
-  THEME_POOL = %w[quality price delivery support packaging usability durability value design].freeze
+  POSITIVE_WORDS = %w[love stunning gorgeous elegant flawless perfect fast luxurious soft chic impeccable].freeze
+  NEGATIVE_WORDS = %w[cheap itchy disappointed defective late torn faded misleading flimsy overpriced poor].freeze
+
+  # Themes grouped by the three feedback points (Decision: product/distribution/visibility).
+  # The dominant theme's group becomes the insight's focus.
+  FOCUS_THEMES = {
+    product:      %w[fit fabric quality stitching design comfort sizing color material craftsmanship],
+    distribution: %w[delivery shipping packaging restock availability returns logistics price],
+    visibility:   %w[website lookbook campaign styling discovery brand sizing-guide support service]
+  }.freeze
+
+  THEME_POOL = FOCUS_THEMES.values.flatten.freeze
 
   # Dimensions every insight scores. Mirrors a subset of Rating.dimension.
   SCORED_DIMENSIONS = %i[overall quality value].freeze
 
   Result = Struct.new(
-    :sentiment, :sentiment_score, :summary, :key_themes,
+    :sentiment, :sentiment_score, :focus, :summary, :key_themes,
     :topics, :confidence, :dimension_scores, :model_version,
     keyword_init: true
   )
@@ -36,13 +46,15 @@ class StubAiAnalyzer
 
   def call
     score = compute_sentiment_score
+    found = themes
     Result.new(
       sentiment: sentiment_label(score),
       sentiment_score: score,
-      summary: build_summary(score),
-      key_themes: themes,
-      topics: topic_weights,
-      confidence: confidence,
+      focus: classify_focus(found),
+      summary: build_summary(score, found),
+      key_themes: found,
+      topics: found.index_with { rand(0.4..1.0).round(2) },
+      confidence: rand(0.6..0.98).round(3),
       dimension_scores: dimension_scores(score),
       model_version: MODEL_VERSION
     )
@@ -56,12 +68,11 @@ class StubAiAnalyzer
   def compute_sentiment_score
     pos = POSITIVE_WORDS.count { |w| text.include?(w) }
     neg = NEGATIVE_WORDS.count { |w| text.include?(w) }
-    raw = (pos - neg) + rand(-1.0..1.0)
-    raw.clamp(-1.0, 1.0).round(3)
+    ((pos - neg) + rand(-1.0..1.0)).clamp(-1.0, 1.0).round(3)
   end
 
   def sentiment_label(score)
-    return :mixed   if score.abs < 0.15 && text.match?(/but|however|though/)
+    return :mixed    if score.abs < 0.15 && text.match?(/but|however|though/)
     return :positive if score > 0.2
     return :negative if score < -0.2
 
@@ -69,20 +80,20 @@ class StubAiAnalyzer
   end
 
   def themes
-    THEME_POOL.select { text.include?(_1) }.presence || THEME_POOL.sample(rand(1..3))
+    found = THEME_POOL.select { text.include?(_1.tr("-", " ")) }
+    found.presence || THEME_POOL.sample(rand(1..3))
   end
 
-  def topic_weights
-    themes.index_with { rand(0.4..1.0).round(2) }
+  # Focus = the feedback point that owns the most of the detected themes.
+  def classify_focus(found)
+    counts = FOCUS_THEMES.transform_values { |themes| (found & themes).size }
+    best = counts.max_by { |_, n| n }
+    best && best.last.positive? ? best.first : FOCUS_THEMES.keys.sample
   end
 
-  def confidence
-    rand(0.6..0.98).round(3)
-  end
-
-  def build_summary(score)
+  def build_summary(score, found)
     tone = sentiment_label(score)
-    subject = themes.first || "the product"
+    subject = found.first&.tr("-", " ") || "the item"
     "Customer expressed #{tone} sentiment, primarily about #{subject}."
   end
 

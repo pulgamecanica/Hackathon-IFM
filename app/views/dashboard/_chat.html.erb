@@ -1,0 +1,30 @@
+<section class="border border-neutral-900">
+  <div class="flex items-center justify-between border-b border-neutral-200 px-8 py-5">
+    <div class="flex items-baseline gap-3">
+      <span class="font-serif text-2xl font-light text-neutral-300">IV</span>
+      <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">The Concierge</h2>
+    </div>
+    <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+      <%= ClaudeClient.available? ? "Claude" : "Rule-based" %>
+    </span>
+  </div>
+
+  <div class="px-8 py-6">
+    <div id="chat-log" class="space-y-4 mb-6 max-h-80 overflow-y-auto">
+      <p class="text-sm text-neutral-400 italic font-serif">
+        Ask, for instance, “show negative feedback about distribution in Paris”
+        or “how is the Silk Slip Dress doing?”
+      </p>
+    </div>
+
+    <%= form_with url: chat_path, method: :post,
+                  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" },
+                  class: "flex items-center border-b border-neutral-900" do |f| %>
+      <%= f.text_field :question, autocomplete: "off",
+            placeholder: "Enquire about product, distribution or visibility…",
+            class: "flex-1 bg-transparent py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none" %>
+      <%= f.submit "Ask",
+            class: "ml-4 text-[11px] uppercase tracking-[0.25em] text-neutral-900 hover:text-neutral-500 cursor-pointer" %>
+    <% end %>
+  </div>
+</section>

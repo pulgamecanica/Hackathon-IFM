@@ -93,7 +93,7 @@ class FeedbackIngestor
       partial: "dashboard/raw_feedback",
       locals: { raw_feedback: raw_feedback }
     )
-    DashboardStats.broadcast_refresh
+    DashboardBroadcaster.refresh
   end
 
   def failure(messages)

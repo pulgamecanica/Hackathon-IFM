@@ -1,42 +1,36 @@
-<%# Replaced in place on every ingest/analysis via DashboardStats.broadcast_refresh. %>
-<div id="stats" class="grid grid-cols-2 md:grid-cols-5 gap-4">
-  <% [
-       ["Total Feedback", stats.total_feedback, "text-slate-100"],
-       ["Processed", stats.processed, "text-emerald-400"],
-       ["In Queue", stats.pending, "text-amber-400"],
-       ["Insights", stats.insights, "text-sky-400"],
-     ].each do |label, value, color| %>
-    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-      <div class="text-2xl font-semibold <%= color %>"><%= value %></div>
-      <div class="text-xs uppercase tracking-wider text-slate-500 mt-1"><%= label %></div>
-    </div>
-  <% end %>
-
-  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-    <div class="text-2xl font-semibold text-violet-400">
-      <%= stats.average_overall ? number_with_precision(stats.average_overall, precision: 2) : "—" %>
-    </div>
-    <div class="text-xs uppercase tracking-wider text-slate-500 mt-1">Avg Rating</div>
+<%# Replaced in place on every ingest/analysis via DashboardBroadcaster.refresh. %>
+<div id="stats">
+  <div class="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-neutral-200 border border-neutral-200">
+    <% [
+         ["Feedback", stats.total_feedback, ""],
+         ["Processed", stats.processed, ""],
+         ["In Queue", stats.pending, ""],
+         ["Insights", stats.insights, ""],
+         ["Avg Rating", stats.average_overall ? number_with_precision(stats.average_overall, precision: 2) : "—",
+          stats.average_overall ? "text-grad-satisfaction" : ""],
+       ].each do |label, value, value_class| %>
+      <div class="px-6 py-8 text-center">
+        <div class="font-serif text-5xl font-light leading-none <%= value_class %>"><%= value %></div>
+        <div class="mt-3 text-[10px] uppercase tracking-[0.25em] text-neutral-500"><%= label %></div>
+      </div>
+    <% end %>
   </div>
 
   <% if stats.sentiment_breakdown.any? %>
-    <div class="col-span-2 md:col-span-5 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs uppercase tracking-wider text-slate-500">Sentiment</span>
-        <span class="text-xs text-slate-500"><%= stats.synthetic_share %>% synthetic</span>
-      </div>
-      <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
-        <%
-          colors = { "positive" => "bg-emerald-500", "neutral" => "bg-slate-500",
-                     "negative" => "bg-rose-500", "mixed" => "bg-amber-500" }
-          total = stats.sentiment_breakdown.values.sum.to_f
-        %>
+    <div class="mt-5 flex items-center gap-4">
+      <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-500 shrink-0">Sentiment</span>
+      <%
+        shades = { "positive" => "grad-positive", "neutral" => "grad-neutral",
+                   "negative" => "grad-negative", "mixed" => "grad-mixed" }
+        total = stats.sentiment_breakdown.values.sum.to_f
+      %>
+      <div class="flex h-1.5 grow overflow-hidden">
         <% stats.sentiment_breakdown.each do |label, count| %>
-          <div class="<%= colors[label] || "bg-slate-600" %>"
-               style="width: <%= (count / total * 100).round %>%"
-               title="<%= label %>: <%= count %>"></div>
+          <div class="<%= shades[label] || "grad-neutral" %> h-full"
+               style="width: <%= (count / total * 100).round %>%" title="<%= label %>: <%= count %>"></div>
         <% end %>
       </div>
+      <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 shrink-0"><%= stats.synthetic_share %>% Synthetic</span>
     </div>
   <% end %>
 </div>
