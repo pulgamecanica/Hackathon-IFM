@@ -134,6 +134,10 @@
 /* Product thumbnails on SKU chips, toggled globally via data-images on the
    filter region. */
 .product-chip { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; padding-left: 0.45rem; }
+
+/* Scope narrowing (Zone / Function / Collection) hides dependent chips. Needs
+   !important to beat the unlayered `.product-chip` display rule above. */
+.scope-hidden { display: none !important; }
 .product-thumb {
   width: 1.4rem; height: 1.4rem; flex: none;
   object-fit: cover; border: 1px solid #e5e5e5; background: #fafafa;

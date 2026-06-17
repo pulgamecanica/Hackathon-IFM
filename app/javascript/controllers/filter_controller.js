@@ -58,7 +58,9 @@ export default class extends Controller {
         const own = chip.dataset["scope" + dim.charAt(0).toUpperCase() + dim.slice(1)]
         return own !== undefined && own !== val // dimension applies to this chip but doesn't match
       })
-      chip.classList.toggle("hidden", hidden)
+      // Use a dedicated !important class — Tailwind's `hidden` loses to the
+      // unlayered `.product-chip { display: inline-flex }` on SKU chips.
+      chip.classList.toggle("scope-hidden", hidden)
     })
   }
 
