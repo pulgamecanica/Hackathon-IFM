@@ -1,39 +1,86 @@
-<section class="border border-neutral-900">
-  <div class="flex items-center justify-between border-b border-neutral-200 px-8 py-5">
-    <div class="flex items-baseline gap-3">
-      <span class="font-serif text-2xl font-light text-neutral-300">✦</span>
-      <h2 class="text-[11px] uppercase tracking-[0.28em] text-neutral-500">The Concierge</h2>
+<%# Floating Concierge chatbot. A fixed launcher (bottom-right) toggles a chat
+    panel. Questions are answered within the dashboard's active filters, and any
+    filters detected in the question are applied to the dashboard itself. %>
+<div data-controller="concierge" class="fixed bottom-6 right-6 z-[1100] flex flex-col items-end print:hidden">
+
+  <%# ---- Chat panel (hidden until launched) ---- %>
+  <div data-concierge-target="panel"
+       class="hidden mb-3 flex w-[min(92vw,400px)] flex-col overflow-hidden border border-neutral-900 bg-white shadow-2xl"
+       style="height: min(70vh, 560px)">
+
+    <%# Header %>
+    <header class="flex shrink-0 items-center justify-between bg-neutral-900 px-5 py-4 text-white">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white font-serif text-neutral-900">✦</span>
+        <div class="leading-tight">
+          <div class="font-serif text-lg tracking-[0.1em]">The Concierge</div>
+          <div class="mt-0.5 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.25em] text-neutral-400">
+            <span class="h-1.5 w-1.5 rounded-full <%= ClaudeClient.available? ? "bg-emerald-400" : "bg-neutral-500" %>"></span>
+            <%= ClaudeClient.available? ? "Online" : "Rule-based" %>
+          </div>
+        </div>
+      </div>
+      <button type="button" data-action="concierge#toggle" aria-label="Close"
+              class="text-2xl leading-none text-neutral-400 transition hover:text-white">×</button>
+    </header>
+
+    <%# Messages %>
+    <div id="concierge-log" data-concierge-target="messages"
+         class="flex-1 space-y-4 overflow-y-auto bg-neutral-50 px-4 py-5">
+      <div class="flex items-end gap-2">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs text-white">✦</span>
+        <div class="max-w-[85%] rounded-2xl rounded-bl-sm border border-neutral-200 bg-white px-4 py-3 text-[15px] leading-relaxed text-neutral-800">
+          <div class="md">
+            <p>Good day. Ask me about the feedback in view — e.g. <em>“main complaints in Tokyo?”</em></p>
+            <p class="mt-1 text-neutral-500">I’ll also set the dashboard filters to match your question.</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
-      <%= ClaudeClient.available? ? "Claude" : "Rule-based" %>
-    </span>
-  </div>
 
-  <%# Make the analyst aware of which filters scope the answers. %>
-  <div class="border-b border-neutral-200 bg-neutral-50 px-8 py-3">
-    <%= render "dashboard/applied_filters", filter: filter %>
-  </div>
-
-  <div class="px-8 py-6">
-    <div id="chat-log" class="space-y-4 mb-6 max-h-80 overflow-y-auto">
-      <p class="text-sm text-neutral-400 italic font-serif">
-        Ask, within the filters above — e.g. “what are the main complaints?”
-        or “how is sentiment trending?”
-      </p>
-    </div>
-
-    <%= form_with url: chat_path, method: :post,
-                  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" },
-                  class: "flex items-center border-b border-neutral-900" do |f| %>
-      <%# Carry the active dashboard filters so answers stay within them. %>
-      <% filter.to_params.each do |key, value| %>
-        <%= hidden_field_tag key, value %>
+    <%# Compose %>
+    <div class="shrink-0 border-t border-neutral-200 bg-white">
+      <%= form_with url: chat_path, method: :post,
+                    data: { concierge_target: "form", action: "turbo:submit-start->concierge#sending" },
+                    class: "flex items-center gap-3 px-4 py-3" do |f| %>
+        <%# Active dashboard filters — synced from the live filter form on send. %>
+        <%= hidden_field_tag :focus %>
+        <%= hidden_field_tag :theme %>
+        <%= hidden_field_tag :sentiment %>
+        <%= hidden_field_tag :sku %>
+        <%= hidden_field_tag :location %>
+        <%= f.text_field :question, autocomplete: "off",
+              placeholder: "Ask the concierge…",
+              data: { concierge_target: "input" },
+              class: "flex-1 bg-transparent text-[15px] text-neutral-900 placeholder-neutral-400 focus:outline-none" %>
+        <button type="submit" aria-label="Send"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-neutral-700">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7z" />
+          </svg>
+        </button>
       <% end %>
-      <%= f.text_field :question, autocomplete: "off",
-            placeholder: "Enquire about the feedback in view…",
-            class: "flex-1 bg-transparent py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none" %>
-      <%= f.submit "Ask",
-            class: "ml-4 text-[11px] uppercase tracking-[0.25em] text-neutral-900 hover:text-neutral-500 cursor-pointer" %>
-    <% end %>
+    </div>
+
+    <%# Templates cloned client-side for the optimistic UI. %>
+    <template data-concierge-target="userTemplate">
+      <div class="flex justify-end">
+        <div class="max-w-[85%] rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[15px] leading-relaxed text-white" data-message-body></div>
+      </div>
+    </template>
+    <template data-concierge-target="typingTemplate">
+      <div id="concierge-typing" class="flex items-end gap-2">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs text-white">✦</span>
+        <div class="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-neutral-200 bg-white px-4 py-3">
+          <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+        </div>
+      </div>
+    </template>
   </div>
-</section>
+
+  <%# ---- Launcher ---- %>
+  <button type="button" data-action="concierge#toggle" data-concierge-target="launcher" aria-label="Open the Concierge"
+          class="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-900 text-white shadow-xl transition hover:bg-neutral-700">
+    <span data-concierge-target="launcherIcon" class="font-serif text-2xl">✦</span>
+  </button>
+</div>

@@ -15,9 +15,10 @@ class FeedbackAnalysisJob < ApplicationJob
     return unless raw_feedback.pending?
 
     raw_feedback.processing!
-    analysis = StubAiAnalyzer.new(raw_feedback).call
+    analysis = analyze(raw_feedback)
 
     AiInsight.transaction do
+      link_detected_products(raw_feedback, analysis)
       insight = create_insight(raw_feedback, analysis)
       create_ratings(insight, raw_feedback, analysis)
       raw_feedback.processed!
@@ -33,6 +34,29 @@ class FeedbackAnalysisJob < ApplicationJob
   end
 
   private
+
+  # Real feedback gets accurate Claude analysis (with a lexical-stub fallback);
+  # the synthetic demo stream stays on the cheap stub.
+  def analyze(raw_feedback)
+    if !raw_feedback.synthetic? && ClaudeClient.available?
+      ClaudeFeedbackAnalyzer.new(raw_feedback).call || StubAiAnalyzer.new(raw_feedback).call
+    else
+      StubAiAnalyzer.new(raw_feedback).call
+    end
+  end
+
+  # When no products were explicitly linked, attach the ones Claude detected in
+  # the text. Feedback that already has products (curated seeds, seller app) is
+  # left untouched so its guaranteed associations stand.
+  def link_detected_products(raw_feedback, analysis)
+    return if raw_feedback.raw_feedback_products.exists?
+    return if analysis.detected_skus.blank?
+
+    Product.where(sku: analysis.detected_skus).each_with_index do |product, position|
+      raw_feedback.raw_feedback_products.create!(product: product, position: position)
+    end
+    raw_feedback.products.reload
+  end
 
   def create_insight(raw_feedback, analysis)
     raw_feedback.create_ai_insight!(

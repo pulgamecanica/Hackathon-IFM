@@ -1,0 +1,65 @@
+<% content_for :title, "LUMA Concierge" %>
+
+<div data-controller="chat" class="flex flex-col bg-neutral-50" style="height: 100dvh">
+  <%# ---- Header ---- %>
+  <header class="shrink-0 bg-neutral-900 text-white" style="padding-top: env(safe-area-inset-top)">
+    <div class="flex items-center gap-3 px-5 py-4">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 font-serif text-lg">✦</span>
+      <div class="leading-tight">
+        <div class="font-serif text-xl tracking-[0.12em]">LUMA Concierge</div>
+        <div class="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.25em] text-neutral-400">
+          <span class="h-1.5 w-1.5 rounded-full <%= ClaudeClient.available? ? "bg-emerald-400" : "bg-neutral-500" %>"></span>
+          <%= ClaudeClient.available? ? "Online" : "Rule-based" %>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <%# ---- Messages ---- %>
+  <div id="messages" data-chat-target="messages" class="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+    <div class="flex items-end gap-2">
+      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white text-xs">✦</span>
+      <div class="max-w-[80%] rounded-2xl rounded-bl-sm border border-neutral-200 bg-white px-4 py-3 text-[15px] leading-relaxed text-neutral-800">
+        <div class="md">
+          <p>Good day. I’m the LUMA seller concierge.</p>
+          <p>Tell me what your client said and I’ll log it as feedback — for instance, <em>“A customer loved the wool coat but said delivery to Paris was late.”</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Compose ---- %>
+  <div class="shrink-0 border-t border-neutral-200 bg-white" style="padding-bottom: env(safe-area-inset-bottom)">
+    <%= form_with url: assistant_path, method: :post,
+                  data: { chat_target: "form", action: "turbo:submit-start->chat#sending" },
+                  class: "flex items-center gap-3 px-4 py-3" do |f| %>
+      <%= f.text_field :message, autocomplete: "off",
+            placeholder: "Describe the client’s feedback…",
+            data: { chat_target: "input" },
+            class: "flex-1 bg-transparent text-[15px] text-neutral-900 placeholder-neutral-400 focus:outline-none" %>
+      <button type="submit" aria-label="Send"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white hover:bg-neutral-700 transition">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7z" />
+        </svg>
+      </button>
+    <% end %>
+    <p class="px-4 pb-2 text-center text-[9px] uppercase tracking-[0.3em] text-neutral-300">Powered by LUMA Intelligence</p>
+  </div>
+
+  <%# ---- Templates cloned by the chat controller ---- %>
+  <template data-chat-target="userTemplate">
+    <div class="flex justify-end">
+      <div class="max-w-[80%] rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[15px] leading-relaxed text-white" data-message-body></div>
+    </div>
+  </template>
+
+  <template data-chat-target="typingTemplate">
+    <div id="typing" class="flex items-end gap-2">
+      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white text-xs">✦</span>
+      <div class="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white border border-neutral-200 px-4 py-3">
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+      </div>
+    </div>
+  </template>
+</div>

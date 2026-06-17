@@ -1,0 +1,4 @@
+<%= turbo_stream.remove "typing" %>
+<%= turbo_stream.append "messages" do %>
+  <%= render "assistant/message", result: @result, detected: @detected %>
+<% end %>

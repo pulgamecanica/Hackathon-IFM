@@ -43,6 +43,9 @@ gem "image_processing", "~> 1.2"
 # Claude API client for the feedback chatbot (used when ANTHROPIC_API_KEY is set)
 gem "anthropic"
 
+# Render the assistant's markdown answers to safe HTML
+gem "redcarpet"
+
 group :development, :test do
   # Loads variables from .env into ENV at boot (e.g. ANTHROPIC_API_KEY). Listed
   # first so it runs before gems that read ENV during initialization.

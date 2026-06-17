@@ -11,10 +11,17 @@
       ["In Store", "in_store"], ["Online Campaign", "online_campaign"], ["OOH Campaign", "ooh_campaign"]
     ] }
   ]
-  facets = ["Zone", "Customers Nationality", "Customers Age", "Collection (SS26…)",
-            "Function", "Line", "# Respondants", "High / Low"]
   sentiments = [["All", "all"], ["Positive", "positive"], ["Neutral", "neutral"], ["Negative", "negative"], ["Mixed", "mixed"]]
   products = Product.active.order(:name)
+  locations = Location.order(:name)
+
+  # Scoping facets ("shadowed" filters up top) — they narrow the choices below.
+  country_names = { "FR" => "France", "IT" => "Italy", "GB" => "United Kingdom",
+                    "US" => "United States", "ES" => "Spain", "DE" => "Germany",
+                    "JP" => "Japan", "PT" => "Portugal" }
+  zones = locations.map(&:country_code).compact_blank.uniq.sort                  # Zone -> reduces Locations
+  functions = Category.where(id: products.select(:category_id)).order(:position) # Function (garment type) -> reduces SKUs
+  collections = products.map(&:collection).compact_blank.uniq.sort               # Collection (season) -> reduces SKUs
 %>
 
 <%# Hidden state submitted to the server on every filter change. %>
@@ -22,19 +29,48 @@
 <%= hidden_field_tag :theme, filter.theme %>
 <%= hidden_field_tag :sentiment, filter.sentiment %>
 <%= hidden_field_tag :sku, filter.sku %>
+<%= hidden_field_tag :location, filter.location_id %>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h2 class="font-serif text-3xl tracking-[0.1em]">Filters</h2>
-    <button type="button" data-action="filter#reset"
-            class="text-[10px] uppercase tracking-[0.25em] text-neutral-500 hover:text-neutral-900 cursor-pointer">Reset</button>
+    <div class="flex items-center gap-5">
+      <button type="button" data-action="filter#toggleImages" data-filter-target="imagesToggle"
+              class="text-[10px] uppercase tracking-[0.25em] text-neutral-500 hover:text-neutral-900 cursor-pointer">Images: On</button>
+      <button type="button" data-action="filter#reset"
+              class="text-[10px] uppercase tracking-[0.25em] text-neutral-500 hover:text-neutral-900 cursor-pointer">Reset</button>
+    </div>
   </div>
 
-  <%# Broader facet vocabulary (display) %>
-  <div class="flex flex-wrap gap-2">
-    <% facets.each do |facet| %>
-      <span class="facet-chip"><%= facet %></span>
-    <% end %>
+  <%# Scoping facets — narrow the functional selectors below (no data filtering). %>
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Zone</span>
+      <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+              data-filter-scope-param="zone" data-filter-value-param="all" data-active>All</button>
+      <% zones.each do |cc| %>
+        <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+                data-filter-scope-param="zone" data-filter-value-param="<%= cc %>"><%= country_names[cc] || cc %></button>
+      <% end %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Function</span>
+      <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+              data-filter-scope-param="function" data-filter-value-param="all" data-active>All</button>
+      <% functions.each do |category| %>
+        <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+                data-filter-scope-param="function" data-filter-value-param="<%= category.slug %>"><%= category.name %></button>
+      <% end %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Collection</span>
+      <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+              data-filter-scope-param="collection" data-filter-value-param="all" data-active>All</button>
+      <% collections.each do |season| %>
+        <button type="button" class="facet-chip" data-filter-target="facet" data-action="filter#narrow"
+                data-filter-scope-param="collection" data-filter-value-param="<%= season %>"><%= season %></button>
+      <% end %>
+    </div>
   </div>
 
   <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-10">
@@ -45,9 +81,37 @@
               data-filter-group-param="sku" data-filter-value-param="all"
               <%= "data-active data-filter-default" if filter.sku.blank? %>>All</button>
       <% products.each do |product| %>
-        <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+        <button type="button" class="filter-chip product-chip" data-filter-target="chip"
+                data-action="click->filter#apply mouseenter->filter#place focus->filter#place"
                 data-filter-group-param="sku" data-filter-value-param="<%= product.sku %>"
-                <%= "data-active" if filter.sku == product.sku %>><%= product.name %></button>
+                data-scope-function="<%= product.category&.slug %>"
+                data-scope-collection="<%= product.collection %>"
+                <%= "data-active" if filter.sku == product.sku %>>
+          <% if product.image_path.present? %>
+            <img src="<%= product.image_path %>" alt="" loading="lazy" class="product-thumb">
+          <% end %>
+          <span><%= product.name %></span>
+          <%# Hover/focus preview — shown regardless of the images toggle. %>
+          <% if product.image_path.present? %>
+            <span class="product-tip" role="tooltip" aria-hidden="true">
+              <img src="<%= product.image_path %>" alt="<%= product.name %>" loading="lazy">
+            </span>
+          <% end %>
+        </button>
+      <% end %>
+    </div>
+
+    <%# Location — functional, one chip per location %>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="mr-1 text-[10px] uppercase tracking-[0.25em] text-neutral-400">Location</span>
+      <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+              data-filter-group-param="location" data-filter-value-param="all"
+              <%= "data-active data-filter-default" if filter.location_id.blank? %>>All</button>
+      <% locations.each do |location| %>
+        <button type="button" class="filter-chip" data-filter-target="chip" data-action="filter#apply"
+                data-filter-group-param="location" data-filter-value-param="<%= location.id %>"
+                data-scope-zone="<%= location.country_code %>"
+                <%= "data-active" if filter.location_id == location.id %>><%= location.name %></button>
       <% end %>
     </div>
   </div>

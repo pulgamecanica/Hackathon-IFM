@@ -115,7 +115,8 @@
 .filter-panel-title:hover { color: #6b6b6b; }
 .filter-panel-title[data-active] { background: #0a0a0a; color: #ffffff; }
 
-/* Static (display-only) facet chips — the broader filter vocabulary. */
+/* "Shadowed" facet chips (Zone, Collection) — muted but interactive; they
+   narrow the functional selectors below rather than filtering data. */
 .facet-chip {
   font-size: 10px;
   text-transform: uppercase;
@@ -124,5 +125,67 @@
   border: 1px solid #e5e5e5;
   color: #a3a3a3;
   background: #fafafa;
+  cursor: pointer;
+  transition: color .15s, background-color .15s, border-color .15s;
+}
+.facet-chip:hover { color: #0a0a0a; border-color: #d4d4d4; }
+.facet-chip[data-active] { background: #0a0a0a; color: #ffffff; border-color: #0a0a0a; }
+
+/* Product thumbnails on SKU chips, toggled globally via data-images on the
+   filter region. */
+.product-chip { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; padding-left: 0.45rem; }
+.product-thumb {
+  width: 1.4rem; height: 1.4rem; flex: none;
+  object-fit: cover; border: 1px solid #e5e5e5; background: #fafafa;
+}
+[data-images="off"] .product-thumb { display: none; }
+
+/* Hover/focus image preview tooltip — independent of the images toggle. Defaults
+   to south; the `place` action flips it north when there is room above. */
+.product-tip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 50;
+  width: 9rem;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  box-shadow: 0 12px 28px rgba(10, 10, 10, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease;
+}
+.product-tip img { display: block; width: 100%; height: auto; object-fit: cover; }
+.product-chip[data-place="north"] .product-tip { top: auto; bottom: calc(100% + 8px); }
+.product-chip:hover .product-tip,
+.product-chip:focus-visible .product-tip { opacity: 1; visibility: visible; }
+
+/* Rendered markdown (assistant answers). */
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p { margin: 0.5em 0; }
+.md ul { list-style: disc; padding-left: 1.25em; margin: 0.5em 0; }
+.md ol { list-style: decimal; padding-left: 1.25em; margin: 0.5em 0; }
+.md li { margin: 0.2em 0; }
+.md strong { font-weight: 600; }
+.md em { font-style: italic; }
+.md a { text-decoration: underline; }
+.md h1, .md h2, .md h3, .md h4 { font-weight: 600; margin: 0.6em 0 0.3em; }
+.md code { font-family: ui-monospace, monospace; background: #f0f0f0; padding: 0 0.25em; border-radius: 2px; font-size: 0.9em; }
+.md blockquote { border-left: 2px solid #d4d4d4; padding-left: 0.75em; color: #525252; margin: 0.5em 0; }
+
+/* Chat typing indicator. */
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 9999px; background: #9ca3af;
+  display: inline-block; animation: typing 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
 }
 

@@ -1,3 +1,4 @@
-<%= turbo_stream.append "chat-log" do %>
-  <%= render "chat/message", answer: @answer %>
+<%= turbo_stream.remove "concierge-typing" %>
+<%= turbo_stream.append "concierge-log" do %>
+  <%= render "chat/message", answer: @answer, applied: @applied_filters %>
 <% end %>

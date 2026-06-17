@@ -53,9 +53,12 @@ class StubAiAnalyzer
 
   SCORED_DIMENSIONS = %i[overall quality value].freeze
 
+  # Shared analysis contract. detected_skus is the product detection from text
+  # (Claude analyzer fills it; the stub leaves it empty since products are
+  # explicitly linked or randomly assigned upstream).
   Result = Struct.new(
     :sentiment, :sentiment_score, :focus, :summary, :key_themes,
-    :topics, :confidence, :dimension_scores, :model_version,
+    :topics, :confidence, :dimension_scores, :model_version, :detected_skus,
     keyword_init: true
   )
 
@@ -76,7 +79,8 @@ class StubAiAnalyzer
       topics: tokens.index_with { rand(0.4..1.0).round(2) },
       confidence: rand(0.6..0.98).round(3),
       dimension_scores: dimension_scores(score),
-      model_version: MODEL_VERSION
+      model_version: MODEL_VERSION,
+      detected_skus: []
     )
   end
 

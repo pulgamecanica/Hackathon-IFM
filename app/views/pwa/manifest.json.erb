@@ -1,22 +1,16 @@
 {
-  "name": "HackathonIfm",
+  "name": "LUMA Concierge",
+  "short_name": "LUMA",
+  "description": "Ask the LUMA feedback assistant — anywhere.",
   "icons": [
-    {
-      "src": "/icon.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "/icon.png",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "maskable"
-    }
+    { "src": "/web-app-manifest-192x192.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+    { "src": "/web-app-manifest-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
+    { "src": "/web-app-manifest-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }
   ],
-  "start_url": "/",
+  "start_url": "/assistant",
+  "scope": "/assistant",
   "display": "standalone",
-  "scope": "/",
-  "description": "HackathonIfm.",
-  "theme_color": "red",
-  "background_color": "red"
+  "orientation": "portrait",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a"
 }

@@ -1,0 +1,28 @@
+<%# Confirmation bubble for a piece of client feedback the seller just logged. %>
+<%
+  linked = []
+  linked << detected.product_name if detected.product_name
+  linked << "at #{detected.location_name}" if detected.location_name
+  suffix = linked.any? ? " (#{linked.join(' ')})" : ""
+
+  if result.success? && !result.duplicate?
+    headline = "Logged ✓"
+    body = "Recorded the client feedback#{suffix}. It’s now being analysed."
+    tone = "text-emerald-700"
+  elsif result.duplicate?
+    headline = "Already logged"
+    body = "That exact feedback is already in the system#{suffix}."
+    tone = "text-neutral-500"
+  else
+    headline = "Couldn’t log that"
+    body = result.errors.to_sentence.presence || "Please try again."
+    tone = "text-red-600"
+  end
+%>
+<div class="flex items-end gap-2">
+  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white text-xs">✦</span>
+  <div class="max-w-[85%] rounded-2xl rounded-bl-sm border border-neutral-200 bg-white px-4 py-3 text-[15px] leading-relaxed text-neutral-800">
+    <div class="text-[10px] uppercase tracking-[0.2em] <%= tone %>"><%= headline %></div>
+    <p class="mt-1"><%= body %></p>
+  </div>
+</div>

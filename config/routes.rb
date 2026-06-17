@@ -8,6 +8,10 @@ Rails.application.routes.draw do
   # Feedback chatbot — natural-language querying with filters.
   post "chat" => "chat#create", as: :chat
 
+  # LUMA Concierge — standalone, installable (PWA) mobile-first chat app.
+  get "assistant" => "assistant#show", as: :assistant
+  post "assistant" => "assistant#create"
+
   # AI chart generation — natural-language request → procedural chart.
   post "charts" => "charts#create", as: :charts
 
@@ -23,10 +27,11 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  # Dynamic PWA files (manifest + service worker) for the LUMA Concierge app.
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
   root "dashboard#index"
 end
+

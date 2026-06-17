@@ -1,18 +1,15 @@
-<%# One question/answer exchange in the chat log. %>
-<div class="space-y-2">
-  <div class="flex justify-end">
-    <div class="max-w-[85%] bg-neutral-900 px-4 py-2 text-sm text-white">
-      <%= answer.question %>
+<%# Bot answer bubble (the user's question is shown optimistically client-side).
+    `data-applied-filters`, when present, tells the concierge controller which
+    filters to apply to the dashboard. %>
+<% applied = local_assigns[:applied].presence %>
+<%= tag.div class: "flex items-end gap-2", data: (applied ? { applied_filters: applied.to_json } : {}) do %>
+  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs text-white">✦</span>
+  <div class="max-w-[85%] rounded-2xl rounded-bl-sm border border-neutral-200 bg-white px-4 py-3 text-[15px] leading-relaxed text-neutral-800">
+    <div class="md"><%= markdown(answer.text) %></div>
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.18em] text-neutral-400">
+      <span class="border border-neutral-200 px-2 py-0.5 text-neutral-600"><%= answer.filters_description %></span>
+      <span><span class="font-numeric"><%= answer.count %></span> match<%= "es" unless answer.count == 1 %></span>
+      <span class="ml-auto"><%= answer.source %></span>
     </div>
   </div>
-  <div class="flex justify-start">
-    <div class="max-w-[88%] border border-neutral-200 px-4 py-3">
-      <p class="text-[15px] leading-relaxed text-neutral-800 font-serif"><%= answer.text %></p>
-      <div class="mt-2.5 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-neutral-400">
-        <span class="border border-neutral-200 px-2 py-0.5 text-neutral-600"><%= answer.filters_description %></span>
-        <span><span class="font-numeric"><%= answer.count %></span> match<%= "es" unless answer.count == 1 %></span>
-        <span class="ml-auto"><%= answer.source %></span>
-      </div>
-    </div>
-  </div>
-</div>
+<% end %>

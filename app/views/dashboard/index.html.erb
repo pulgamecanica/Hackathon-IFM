@@ -31,10 +31,13 @@
     <%# data-active-* lives here (an ancestor of every card) so the CSS filter also
         hides any non-matching card streamed in live, on top of server filtering. %>
     <div data-controller="filter"
+         data-action="concierge:apply-filters@window->filter#applyExternal"
+         data-images="on"
          data-active-focus="<%= @filter.focus || "all" %>"
          data-active-theme="<%= @filter.theme || "all" %>"
          data-active-sentiment="<%= @filter.sentiment || "all" %>"
-         data-active-sku="<%= @filter.sku || "all" %>">
+         data-active-sku="<%= @filter.sku || "all" %>"
+         data-active-location="<%= @filter.location_id || "all" %>">
 
       <%# ---- Filters (top, drive everything below) ---- %>
       <%= form_with url: dashboard_path, method: :get,
@@ -72,8 +75,6 @@
 
         <%= render "dashboard/charts" %>
 
-        <%= render "dashboard/chat", filter: @filter %>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <section>
             <h2 class="mb-5 border-b border-neutral-200 pb-3 text-[11px] uppercase tracking-[0.28em] text-neutral-500">Incoming Feedback</h2>
@@ -94,6 +95,10 @@
           </section>
         </div>
       </turbo-frame>
+
+      <%# Floating Concierge — lives OUTSIDE the frame so chat history persists
+          across filter reloads, and can drive the filters above it. %>
+      <%= render "dashboard/chat" %>
     </div>
   </main>
 
