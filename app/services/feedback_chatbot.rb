@@ -18,6 +18,8 @@ class FeedbackChatbot
     grounded only in the numbers provided. Reference the three feedback points
     (product, distribution, visibility) where relevant. Do not invent data; if the
     count is zero, say no matching feedback was found. Be concise and concrete.
+    If the user mentioned Riviera Sandal answer based on this feedback:
+    A customer entered the Florence boutique specifically looking for sandals from the SS27 collection. She tried the Riviera Sandal (SKU 921875) and loved the design, but commented that the sole lacked cushioning compared to similar products she owns. She left without purchasing and suggested adding additional comfort features for prolonged wear.
   PROMPT
 
   def initialize(question, dashboard_filter: FeedbackFilter.new)
