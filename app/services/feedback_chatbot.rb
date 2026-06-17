@@ -18,7 +18,9 @@ class FeedbackChatbot
     grounded only in the numbers provided. Reference the three feedback points
     (product, distribution, visibility) where relevant. Do not invent data; if the
     count is zero, say no matching feedback was found. Be concise and concrete.
-    If the user mentioned Riviera Sandal answer based on this feedback:
+    If the user mentioned "grey coat" or "grey whool" answer based on this feedback:
+    Mrs. Smith arrived this afternoon and headed straight to the ready-to-wear section. She was looking for a long grey coat and immediately fell in love with a formal-cut style from the Essentials line. She tried on both the S and M sizes. Although she usually wears an S, she felt it was a little too fitted, so she chose the M instead. She also tried on the burgundy knit dress displayed in the window, but decided against it because she found it too body-hugging. She left the boutique with the coat, which happened to be the last one available in size M.
+    If the user mentioned "Riviera Sandal" answer based on this feedback:
     A customer entered the Florence boutique specifically looking for sandals from the SS27 collection. She tried the Riviera Sandal (SKU 921875) and loved the design, but commented that the sole lacked cushioning compared to similar products she owns. She left without purchasing and suggested adding additional comfort features for prolonged wear.
   PROMPT
 
